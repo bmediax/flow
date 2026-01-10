@@ -3,7 +3,8 @@ import clsx from 'clsx'
 import { useLiveQuery } from 'dexie-react-hooks'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import {
   MdCheckBox,
   MdCheckBoxOutlineBlank,
@@ -14,8 +15,8 @@ import {
 import { useSet } from 'react-use'
 import { usePrevious } from 'react-use'
 
-import { ReaderGridView, Button, TextField, DropZone } from '../components'
-import { BookRecord, CoverRecord, db } from '../db'
+import { Button, DropZone, ReaderGridView, TextField } from '../components'
+import { type BookRecord, type CoverRecord, db } from '../db'
 import { addFile, fetchBook, handleFiles } from '../file'
 import {
   useDisablePinchZooming,
