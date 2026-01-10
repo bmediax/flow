@@ -4,14 +4,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
 const { withSentryConfig } = require('@sentry/nextjs')
-const withPWA = require('next-pwa')({
+const withPWA = require('@ducanh2912/next-pwa').default({
   dest: 'public',
 })
-const withTM = require('next-transpile-modules')([
-  '@flow/internal',
-  '@flow/epubjs',
-  '@material/material-color-utilities',
-])
 
 const IS_DEV = process.env.NODE_ENV === 'development'
 const IS_DOCKER = process.env.DOCKER
@@ -36,6 +31,11 @@ const sentryWebpackPluginOptions = {
  **/
 const config = {
   pageExtensions: ['ts', 'tsx'],
+  transpilePackages: [
+    '@flow/internal',
+    '@flow/epubjs',
+    '@material/material-color-utilities',
+  ],
   webpack(config) {
     return config
   },
@@ -45,13 +45,11 @@ const config = {
   },
   ...(IS_DOCKER && {
     output: 'standalone',
-    experimental: {
-      outputFileTracingRoot: path.join(__dirname, '../../'),
-    },
+    outputFileTracingRoot: path.join(__dirname, '../../'),
   }),
 }
 
-const base = withPWA(withTM(withBundleAnalyzer(config)))
+const base = withPWA(withBundleAnalyzer(config))
 
 const dev = base
 const docker = base
