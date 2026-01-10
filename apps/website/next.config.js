@@ -2,7 +2,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
 const nextTranslate = require('next-translate')
-const withTM = require('next-transpile-modules')(['@flow/internal'])
 
 /**
  * @type {import('rehype-pretty-code').Options}
@@ -32,9 +31,7 @@ const opts = {
  **/
 const config = {
   pageExtensions: ['ts', 'tsx', 'mdx'],
-  pwa: {
-    dest: 'public',
-  },
+  transpilePackages: ['@flow/internal'],
   webpack: (config, options) => {
     config.module.rules.push({
       test: /.mdx?$/, // load both .md and .mdx files
@@ -57,4 +54,4 @@ const config = {
   },
 }
 
-module.exports = nextTranslate(withTM(withBundleAnalyzer(config)))
+module.exports = nextTranslate(withBundleAnalyzer(config))
