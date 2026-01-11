@@ -46,5 +46,6 @@ COPY --from=installer /app/apps/reader/package.json .
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=installer --chown=nextjs:nodejs /app/apps/reader/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/reader/.next/static ./apps/reader/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/reader/public ./apps/reader/public
 
 CMD node apps/reader/server.js
