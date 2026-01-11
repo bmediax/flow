@@ -1,51 +1,39 @@
-# https://github.com/vercel/turborepo/blob/a2a04ed4eba28602c7cdb36377c75a2f7007e90d/examples/with-docker/apps/web/Dockerfile
+# Simple Next.js Dockerfile for standalone output
 
-FROM node:18-alpine AS builder
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
-RUN apk update
-# Set working directory
-WORKDIR /app
-RUN yarn global add turbo
-COPY . .
-# Only Take packages that are needed to compile this app
-RUN turbo prune --scope=@flow/reader --docker
-
-# Add lockfile and package.json's of isolated subworkspace
-FROM node:18-alpine AS installer
-RUN apk add --no-cache libc6-compat
-RUN apk update
 WORKDIR /app
 
-# First install the dependencies (as they change less often)
-COPY .gitignore .gitignore
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/pnpm-*.yaml .
+# Install dependencies
+COPY package.json pnpm-lock.yaml ./
 RUN corepack enable
 RUN pnpm i --frozen-lockfile
 
-# Build the project
-COPY --from=builder /app/out/full/ .
-COPY turbo.json turbo.json
-COPY tsconfig.*json .
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-RUN DOCKER=1 pnpm -F reader build
+ENV DOCKER=1
+RUN corepack enable
+RUN pnpm build
 
 FROM node:18-alpine AS runner
 WORKDIR /app
+
+ENV NODE_ENV=production
 
 # Don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 USER nextjs
 
-COPY --from=installer /app/apps/reader/next.config.js .
-COPY --from=installer /app/apps/reader/package.json .
+COPY --from=builder /app/next.config.js .
+COPY --from=builder /app/package.json .
 
 # Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=installer --chown=nextjs:nodejs /app/apps/reader/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/reader/.next/static ./apps/reader/.next/static
-COPY --from=installer --chown=nextjs:nodejs /app/apps/reader/public ./apps/reader/public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-CMD node apps/reader/server.js
+CMD ["node", "server.js"]
