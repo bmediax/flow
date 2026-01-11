@@ -1,4 +1,4 @@
-import { Html, Head, Main, NextScript } from 'next/document'
+import { Head, Html, Main, NextScript } from 'next/document'
 
 export default function Document() {
   return (
@@ -7,7 +7,7 @@ export default function Document() {
     // so we should set background on `html`
     <Html className="bg-default">
       <Head>
-        <GoogleTagManager />
+        {/* <GoogleTagManager /> */}
         <link rel="icon" href="/icons/192.png"></link>
         <PWA />
         <PreventFlash />
