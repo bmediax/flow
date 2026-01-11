@@ -1,6 +1,8 @@
+import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server'
 import { useBoolean } from '@literal-ui/hooks'
 import clsx from 'clsx'
 import { useLiveQuery } from 'dexie-react-hooks'
+import type { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import type React from 'react'
@@ -34,6 +36,22 @@ import { copy } from '../utils'
 const placeholder = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect fill="gray" fill-opacity="0" width="1" height="1"/></svg>`
 
 const SOURCE = 'src'
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  const { isAuthenticated } = getKindeServerSession()
+  const isAuthed = await isAuthenticated()
+
+  if (!isAuthed) {
+    return {
+      redirect: {
+        destination: '/api/auth/login',
+        permanent: false,
+      },
+    }
+  }
+
+  return { props: {} }
+}
 
 export default function Index() {
   const { focusedTab } = useReaderSnapshot()
