@@ -124,7 +124,7 @@ const DropZoneInner: React.FC<DropZoneProps> = ({
 
 const DndContext = createContext<{
   dragover: boolean
-  setDragEvent: (e?: DragEvent) => void
+  setDragEvent: (_e?: DragEvent) => void
 }>({ dragover: false, setDragEvent: () => {} })
 const DndProvider: React.FC = ({ children }) => {
   const [dragover, setDragover] = useState(false)

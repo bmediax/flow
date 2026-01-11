@@ -1,6 +1,7 @@
 import './styles.css'
 import 'react-photo-view/dist/react-photo-view.css'
 
+import { KindeProvider } from '@kinde-oss/kinde-auth-nextjs'
 import { LiteralProvider } from '@literal-ui/core'
 import { ErrorBoundary } from '@sentry/nextjs'
 import type { AppProps } from 'next/app'
@@ -16,14 +17,16 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary fallback={<Fallback />}>
-      <LiteralProvider>
-        <RecoilRoot>
-          <Theme />
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </RecoilRoot>
-      </LiteralProvider>
+      <KindeProvider>
+        <LiteralProvider>
+          <RecoilRoot>
+            <Theme />
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </RecoilRoot>
+        </LiteralProvider>
+      </KindeProvider>
     </ErrorBoundary>
   )
 }

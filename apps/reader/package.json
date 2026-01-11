@@ -9,9 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@github/mini-throttle": "2.1.0",
     "@flow/epubjs": "workspace:*",
     "@flow/internal": "workspace:*",
+    "@github/mini-throttle": "2.1.0",
+    "@kinde-oss/kinde-auth-nextjs": "2.11.0",
     "@literal-ui/core": "0.0.13",
     "@literal-ui/hooks": "0.0.8",
     "@literal-ui/next": "0.0.3",
@@ -47,6 +48,7 @@
     "valtio": "1.6.0"
   },
   "devDependencies": {
+    "@ducanh2912/next-pwa": "10.2.9",
     "@flow/tailwind": "workspace:*",
     "@tailwindcss/aspect-ratio": "0.4.2",
     "@tailwindcss/line-clamp": "0.4.2",
@@ -55,7 +57,6 @@
     "@types/react": "17.0.43",
     "@types/uuid": "8.3.4",
     "autoprefixer": "10.4.4",
-    "@ducanh2912/next-pwa": "10.2.9",
     "postcss": "8.4.12",
     "tailwindcss": "3.2.0",
     "type-fest": "2.12.2"
