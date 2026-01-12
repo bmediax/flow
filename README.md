@@ -1,12 +1,8 @@
-<h1 align="center"><a href="https://flowoss.com">Flow - Open Source Software (OSS)</a></h1>
+<h1 align="center"><a href="https://flowoss.com">Flow</a></h1>
 
 <h2 align="center">Redefine ePub reader</h2>
 
 <p align="center">Free. Open source. Browser-based.</p>
-
-<p align="center"><img src="apps/website/public/screenshots/01.webp"/>
-
-</p>
 
 ## Features
 
@@ -16,17 +12,14 @@
 - Custom typography
 - Highlight and Annotation
 - Theme
-- Share/Download book with link
 - Data export
-- Cloud storage
-
-For planed features, see our [roadmap](https://pacexy.notion.site/283696d0071c43bfb03652e8e5f47936?v=b43f4dd7a3cb4ce785d6c32b698a8ff5).
+- Cloud storage (Dropbox)
 
 ## Development
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org)
+- [Node.js](https://nodejs.org) (v20+)
 - [pnpm](https://pnpm.io/installation)
 - [Git](https://git-scm.com/downloads)
 
@@ -36,46 +29,52 @@ For planed features, see our [roadmap](https://pacexy.notion.site/283696d0071c43
 git clone https://github.com/pacexy/flow
 ```
 
-### Install the dependencies
+### Install dependencies
 
 ```bash
-pnpm i
+pnpm install
 ```
 
-### Setup the environment variables
+### Setup environment variables
 
-Copy and rename all `.env.local.example`s to `.env.local` and setup the environment variables.
+Copy `.env.local.example` to `.env.local` and configure the required variables.
 
-### Run the apps
+### Run the dev server
 
 ```bash
 pnpm dev
 ```
 
-## Self-hosting
+The app will be available at `http://localhost:7127`.
 
-Before self-hosting, you should [setup the environment variables](#setup-the-environment-variables).
+### Other commands
+
+```bash
+pnpm build    # Production build
+pnpm lint     # Run ESLint
+pnpm start    # Start production server
+```
+
+## Self-hosting
 
 ### Docker
 
-You can use docker-compose:
+Using docker-compose:
 
 ```sh
 docker compose up -d
 ```
 
-Or build the image and run it manually:
+Or build and run manually:
 
 ```sh
 docker build -t flow .
-docker run -p 3000:3000 --env-file apps/reader/.env.local flow
+docker run -p 3000:3000 --env-file .env.local flow
 ```
 
 ## Contributing
 
-There are many ways in which you can participate in this project, for example:
-
-- [Submit bugs and feature requests](https://github.com/pacexy/flow/issues/new), and help us verify as they are checked in
+- [Submit bugs and feature requests](https://github.com/pacexy/flow/issues/new)
 - [Submit pull requests](https://github.com/pacexy/flow/pulls)
 
 ## Credits
@@ -85,4 +84,3 @@ There are many ways in which you can participate in this project, for example:
 - [Next.js](https://nextjs.org/)
 - [TypeScript](https://www.typescriptlang.org)
 - [Vercel](https://vercel.com)
-- [Turborepo](https://turbo.build/repo)

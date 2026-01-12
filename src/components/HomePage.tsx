@@ -38,7 +38,7 @@ const SOURCE = 'src'
 
 export function HomePage() {
   const { focusedTab } = useReaderSnapshot()
-  const router = useRouter()
+  // const router = useRouter()
   const searchParams = useSearchParams()
   const src = searchParams.get(SOURCE)
   const [loading, setLoading] = useState(!!src)

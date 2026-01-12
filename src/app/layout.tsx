@@ -1,8 +1,9 @@
+import './globals.css'
+import 'react-photo-view/dist/react-photo-view.css'
+
 import type { Metadata, Viewport } from 'next'
 
 import { Providers } from './providers'
-import './globals.css'
-import 'react-photo-view/dist/react-photo-view.css'
 
 const background = {
   light: 'white',
@@ -10,7 +11,7 @@ const background = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flow',
+  title: 'Reader',
   icons: {
     icon: '/icons/192.png',
     apple: '/icons/192.png',

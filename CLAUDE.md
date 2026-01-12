@@ -18,21 +18,23 @@ pnpm start                # Start production server
 
 ## Architecture
 
-Next.js ePub reader application:
+Next.js 15 ePub reader application using the App Router:
 
 - **src/** - Application source code
+  - `app/` - Next.js App Router pages and layouts
   - `components/` - React components
   - `hooks/` - Custom React hooks
   - `models/` - Data models and Dexie (IndexedDB) schemas
-  - `pages/` - Next.js pages
-  - Uses Recoil for state management
+  - `state.ts` - Global state using Jotai
+  - `db.ts` - Dexie database configuration
+  - `sync.ts` - Dropbox sync logic
 
 - **lib/** - Local packages
   - `epubjs/` - Vendored fork of epub.js for ePub parsing/rendering
   - `internal/` - Shared React/TypeScript utilities
   - `tailwind/` - Shared Tailwind CSS preset
 
-- **public/** - Static assets
+- **public/** - Static assets and PWA files
 
 ## Code Style
 
@@ -41,10 +43,17 @@ Next.js ePub reader application:
 - ESLint extends Next.js defaults
 - Components: PascalCase; Hooks: camelCase with `use` prefix; Routes: kebab-case
 
+## Key Dependencies
+
+- **React 19** with Next.js 15
+- **Jotai** for atomic state management
+- **Dexie** for IndexedDB persistence
+- **Tailwind CSS** for styling
+
 ## Environment Setup
 
 Copy `.env.local.example` to `.env.local` before development.
 
 ## Commit Convention
 
-Conventional Commits with scopes: `feat:`, `fix:`, `chore:`, etc.
+Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, etc.
