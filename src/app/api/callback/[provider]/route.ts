@@ -7,6 +7,7 @@ import { mapToToken } from '../../../../sync'
 const dbx = new Dropbox({
   clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
   clientSecret: process.env.DROPBOX_CLIENT_SECRET,
+  fetch,
 })
 
 export async function GET(request: NextRequest) {
