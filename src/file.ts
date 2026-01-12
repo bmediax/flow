@@ -1,3 +1,4 @@
+import jschardet from 'jschardet'
 import JSZip from 'jszip'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -8,10 +9,78 @@ import { mapExtToMimes } from './mime'
 import { unpack } from './sync'
 
 /**
+ * Detect encoding and decode text file content
+ * Supports UTF-8, GBK, GB2312, GB18030, and other common encodings
+ */
+async function decodeTextFile(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer()
+  const uint8Array = new Uint8Array(buffer)
+
+  // Convert to binary string for jschardet (works in browser)
+  const binaryString = Array.from(uint8Array)
+    .map((byte) => String.fromCharCode(byte))
+    .join('')
+
+  // Use jschardet to detect encoding
+  const detected = jschardet.detect(binaryString)
+  const encoding = detected?.encoding || 'UTF-8'
+  const confidence = detected?.confidence || 0
+
+  console.log(`Detected encoding: ${encoding} (confidence: ${(confidence * 100).toFixed(1)}%)`)
+
+  // Map common encoding names to TextDecoder-compatible names
+  const encodingMap: Record<string, string> = {
+    'UTF-8': 'utf-8',
+    'ascii': 'utf-8',
+    'ISO-8859-1': 'iso-8859-1',
+    'ISO-8859-2': 'iso-8859-2',
+    'windows-1252': 'windows-1252',
+    'GB2312': 'gbk',
+    'GB18030': 'gb18030',
+    'GBK': 'gbk',
+    'Big5': 'big5',
+    'EUC-JP': 'euc-jp',
+    'SHIFT_JIS': 'shift_jis',
+    'EUC-KR': 'euc-kr',
+    'UTF-16LE': 'utf-16le',
+    'UTF-16BE': 'utf-16be',
+  }
+
+  const normalizedEncoding = encodingMap[encoding] || encoding.toLowerCase()
+
+  // Try decoding with detected encoding
+  try {
+    const decoder = new TextDecoder(normalizedEncoding, { fatal: true })
+    return decoder.decode(uint8Array)
+  } catch {
+    console.warn(`Failed to decode with ${normalizedEncoding}, trying fallbacks...`)
+  }
+
+  // Fallback order for Chinese text files
+  const fallbackEncodings = ['utf-8', 'gbk', 'gb18030', 'big5', 'iso-8859-1']
+
+  for (const enc of fallbackEncodings) {
+    try {
+      const decoder = new TextDecoder(enc, { fatal: true })
+      const text = decoder.decode(uint8Array)
+      console.log(`Successfully decoded with fallback encoding: ${enc}`)
+      return text
+    } catch {
+      continue
+    }
+  }
+
+  // Last resort: use non-fatal UTF-8 decoder (may have replacement characters)
+  console.warn('All encoding attempts failed, using UTF-8 with replacement characters')
+  const decoder = new TextDecoder('utf-8', { fatal: false })
+  return decoder.decode(uint8Array)
+}
+
+/**
  * Convert a plain text file to ePub format
  */
 export async function txtToEpub(file: File): Promise<File> {
-  const text = await file.text()
+  const text = await decodeTextFile(file)
   const title = file.name.replace(/\.txt$/i, '')
   const bookId = uuidv4()
 
