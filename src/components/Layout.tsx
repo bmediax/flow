@@ -1,20 +1,4 @@
-import { Overlay } from '@literal-ui/core'
-import clsx from 'clsx'
-import { useAtom } from 'jotai'
 import { ComponentProps, useEffect, useState } from 'react'
-import { useMemo } from 'react'
-import { IconType } from 'react-icons'
-import {
-  MdFormatUnderlined,
-  MdOutlineImage,
-  MdSearch,
-  MdToc,
-  MdTimeline,
-  MdOutlineLightMode,
-} from 'react-icons/md'
-import { RiFontSize, RiHome6Line, RiSettings5Line } from 'react-icons/ri'
-
-import type { Action } from '../hooks'
 import {
   Env,
   useAction,
@@ -24,19 +8,36 @@ import {
   useSetAction,
   useTranslation,
 } from '../hooks'
-import { reader, useReaderSnapshot } from '../models'
-import { navbarAtom } from '../state'
-import { activeClass } from '../styles'
-
+import {
+  MdFormatUnderlined,
+  MdOutlineImage,
+  MdOutlineLightMode,
+  MdSearch,
+  MdTimeline,
+  MdToc,
+} from 'react-icons/md'
+import { RiFontSize, RiHome6Line, RiSettings5Line } from 'react-icons/ri'
 import { SplitView, useSplitViewItem } from './base'
-import { Settings } from './pages'
+import { reader, useReaderSnapshot } from '../models'
+
+import type { Action } from '../hooks'
 import { AnnotationView } from './viewlets/AnnotationView'
+import { FaSignOutAlt } from "react-icons/fa";
+import { IconType } from 'react-icons'
 import { ImageView } from './viewlets/ImageView'
+import { LogoutLink } from '@kinde-oss/kinde-auth-nextjs/components'
+import { Overlay } from '@literal-ui/core'
 import { SearchView } from './viewlets/SearchView'
+import { Settings } from './pages'
 import { ThemeView } from './viewlets/ThemeView'
 import { TimelineView } from './viewlets/TimelineView'
 import { TocView } from './viewlets/TocView'
 import { TypographyView } from './viewlets/TypographyView'
+import { activeClass } from '../styles'
+import clsx from 'clsx'
+import { navbarAtom } from '../state'
+import { useAtom } from 'jotai'
+import { useMemo } from 'react'
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useColorScheme()
@@ -193,6 +194,12 @@ function PageActionBar({ env }: EnvActionBarProps) {
         Component: Settings,
         env: Env.Desktop | Env.Mobile,
       },
+      {
+        name: 'sign-out',
+        title: 'Sign Out',
+        Icon: FaSignOutAlt,
+        env: Env.Desktop | Env.Mobile,
+      },
     ],
     [],
   )
@@ -201,19 +208,37 @@ function PageActionBar({ env }: EnvActionBarProps) {
     <ActionBar>
       {pageActions
         .filter((a) => a.env & env)
-        .map(({ name, title, Icon, Component, disabled }, i) => (
-          <ActionButton
-            title={t(`${title}.title`)}
-            Icon={Icon}
-            active={mobile ? action === name : undefined}
-            disabled={disabled}
-            onClick={() => {
-              Component ? reader.addTab(Component) : reader.clear()
-              setAction(name)
-            }}
-            key={i}
-          />
-        ))}
+        .map(({ name, title, Icon, Component, disabled }, i) => {
+          if (name === 'sign-out') {
+            return (
+              <LogoutLink
+                key={i}
+                className="contents"
+              >
+                <ActionButton
+                  // as="div"
+                  title={title}
+                  Icon={Icon}
+                  active={mobile ? action === name : undefined}
+                  disabled={disabled}
+                />
+              </LogoutLink>
+            )
+          }
+          return (
+            <ActionButton
+              title={t(`${title}.title`)}
+              Icon={Icon}
+              active={mobile ? action === name : undefined}
+              disabled={disabled}
+              onClick={() => {
+                Component ? reader.addTab(Component) : reader.clear()
+                setAction(name)
+              }}
+              key={i}
+            />
+          )
+        })}
     </ActionBar>
   )
 }

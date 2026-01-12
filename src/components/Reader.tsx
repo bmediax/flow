@@ -1,6 +1,13 @@
-import { useEventListener } from '@literal-ui/hooks'
-import clsx from 'clsx'
-import { useSetAtom } from 'jotai'
+import * as pages from './pages'
+
+import {
+  Annotations,
+  getClickedAnnotation,
+  setClickedAnnotation,
+} from './Annotation'
+import { BookTab, reader, useReaderSnapshot } from '../models'
+import { DropZone, SplitView, useDndContext, useSplitViewItem } from './base'
+import { MdChevronRight, MdWebAsset } from 'react-icons/md'
 import React, {
   ComponentProps,
   useCallback,
@@ -8,16 +15,6 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { MdChevronRight, MdWebAsset } from 'react-icons/md'
-import { RiBookLine } from 'react-icons/ri'
-import { PhotoSlider } from 'react-photo-view'
-import { useSnapshot } from 'valtio'
-
-import { RenditionSpread } from '@flow/epubjs/types/rendition'
-import { navbarAtom } from '@flow/reader/state'
-
-import { db } from '../db'
-import { handleFiles } from '../file'
 import {
   hasSelection,
   useBackground,
@@ -28,19 +25,21 @@ import {
   useTranslation,
   useTypography,
 } from '../hooks'
-import { BookTab, reader, useReaderSnapshot } from '../models'
-import { isTouchScreen } from '../platform'
-import { updateCustomStyle } from '../styles'
 
-import {
-  getClickedAnnotation,
-  setClickedAnnotation,
-  Annotations,
-} from './Annotation'
+import { PhotoSlider } from 'react-photo-view'
+import { RenditionSpread } from '@flow/epubjs/types/rendition'
+import { RiBookLine } from 'react-icons/ri'
 import { Tab } from './Tab'
 import { TextSelectionMenu } from './TextSelectionMenu'
-import { DropZone, SplitView, useDndContext, useSplitViewItem } from './base'
-import * as pages from './pages'
+import clsx from 'clsx'
+import { db } from '../db'
+import { handleFiles } from '../file'
+import { isTouchScreen } from '../platform'
+import { navbarAtom } from '@flow/reader/state'
+import { updateCustomStyle } from '../styles'
+import { useEventListener } from '@literal-ui/hooks'
+import { useSetAtom } from 'jotai'
+import { useSnapshot } from 'valtio'
 
 function handleKeyDown(tab?: BookTab) {
   return (e: KeyboardEvent) => {
