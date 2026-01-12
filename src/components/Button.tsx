@@ -1,7 +1,7 @@
-import { StateLayer } from '@literal-ui/core'
-import clsx from 'clsx'
 import { ComponentProps } from 'react'
 import { IconType } from 'react-icons'
+import { StateLayer } from '@literal-ui/core'
+import clsx from 'clsx'
 
 interface IconButtonProps extends ComponentProps<'button'> {
   Icon: IconType

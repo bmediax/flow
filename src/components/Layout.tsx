@@ -291,7 +291,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({
   return (
     <button
       className={clsx(
-        'Action relative flex h-12 w-12 flex-1 items-center justify-center sm:flex-initial',
+        'Action relative flex h-10 w-10 flex-1 items-center justify-center sm:flex-initial',
         active ? 'text-on-surface-variant' : 'text-outline/70',
         props.disabled ? 'text-on-disabled' : 'hover:text-on-surface-variant ',
         className,
