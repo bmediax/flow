@@ -5,4 +5,5 @@ export const mapExtToMimes = {
     'application/zip-compressed',
     'application/x-zip-compressed',
   ],
+  '.txt': ['text/plain'],
 }

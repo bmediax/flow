@@ -318,7 +318,7 @@ const Library: React.FC = () => {
                 <Button className="relative">
                   <input
                     type="file"
-                    accept="application/epub+zip,application/epub,application/zip"
+                    accept="application/epub+zip,application/epub,application/zip,text/plain,.txt"
                     className="absolute inset-0 cursor-pointer opacity-0"
                     onChange={(e) => {
                       const files = e.target.files
