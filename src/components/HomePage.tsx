@@ -395,7 +395,7 @@ const Book: React.FC<BookProps> = ({
           if (select) {
             toggle(book.id)
           } else {
-            if (mobile) router.push('/_')
+            if (mobile) router.push('/read')
             reader.addTab(book)
           }
         }}
