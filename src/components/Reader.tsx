@@ -19,6 +19,7 @@ import {
   hasSelection,
   useBackground,
   useColorScheme,
+  useCurrentTime,
   useDisablePinchZooming,
   useMobile,
   useSync,
@@ -454,6 +455,7 @@ interface FooterProps {
 }
 const ReaderPaneFooter: React.FC<FooterProps> = ({ tab }) => {
   const { locationToReturn, location, book } = useSnapshot(tab)
+  const { time, toggleFormat } = useCurrentTime()
 
   return (
     <Bar>
@@ -468,18 +470,36 @@ const ReaderPaneFooter: React.FC<FooterProps> = ({ tab }) => {
           >
             Return to {locationToReturn.end.cfi}
           </button>
-          <button
-            onClick={() => {
-              tab.hidePrevLocation()
-            }}
-          >
-            Stay
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                tab.hidePrevLocation()
+              }}
+            >
+              Stay
+            </button>
+            <button
+              onClick={toggleFormat}
+              className="text-gray-500 hover:text-gray-400"
+              title="Toggle time format"
+            >
+              {time}
+            </button>
+          </div>
         </>
       ) : (
         <>
           <div>{location?.start.href}</div>
-          <div>{((book.percentage ?? 0) * 100).toFixed()}%</div>
+          <div className="flex items-center gap-2">
+            <div>{((book.percentage ?? 0) * 100).toFixed()}%</div>
+            <button
+              onClick={toggleFormat}
+              className="text-gray-500 hover:text-gray-400"
+              title="Toggle time format"
+            >
+              {time}
+            </button>
+          </div>
         </>
       )}
     </Bar>
