@@ -9,11 +9,11 @@ Flow is an open-source browser-based ePub reader featuring grid layout, search, 
 ## Build & Development Commands
 
 ```bash
-pnpm install              # Install dependencies
-pnpm dev                  # Run dev server on port 7127
-pnpm build                # Production build
-pnpm lint                 # ESLint + Next.js checks
-pnpm start                # Start production server
+bun install               # Install dependencies
+bun dev                   # Run dev server on port 7127
+bun run build             # Production build
+bun run lint              # ESLint + Next.js checks
+bun start                 # Start production server
 ```
 
 ## Architecture
