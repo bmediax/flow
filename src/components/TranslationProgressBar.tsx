@@ -1,6 +1,6 @@
 'use client'
 
-import { useActiveTranslation } from '@/state'
+import { useActiveTranslation } from '../state'
 
 export function TranslationProgressBar() {
   const [activeTranslation] = useActiveTranslation()

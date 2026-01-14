@@ -4,7 +4,7 @@ import 'react-photo-view/dist/react-photo-view.css'
 import type { Metadata, Viewport } from 'next'
 
 import { Providers } from './providers'
-import { TranslationProgressBar } from '@/components/TranslationProgressBar'
+import { TranslationProgressBar } from '../components/TranslationProgressBar'
 
 const background = {
   light: 'white',

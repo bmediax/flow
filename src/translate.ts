@@ -56,7 +56,7 @@ async function translateWithAnthropic(
       },
       body: JSON.stringify({
         model: model,
-        max_tokens: 4096,
+        max_tokens: 16384,
         messages: [
           {
             role: 'user',
@@ -156,7 +156,7 @@ async function translateWithOpenAI(
             content: text,
           },
         ],
-        max_tokens: 4096,
+        max_tokens: 16384,
         temperature: 0.3,
       }),
     })
@@ -270,8 +270,30 @@ async function translateDocument(
   // Use a unique delimiter that's very unlikely to appear in normal text
   const DELIMITER = '<<<TEXTNODE_SEPARATOR>>>'
 
-  // Batch nodes together for efficiency (but not too many to avoid hitting token limits)
-  const batchSize = 20
+  // Calculate total text length to determine batching strategy
+  const totalText = textNodes.map((node) => node.textContent).join('')
+  const totalLength = totalText.length
+
+  // Smart batching: try to send entire chapter at once for better context
+  // Only batch if chapter is extremely long (>100k chars ≈ 25k tokens)
+  // This gives AI full chapter context for better translation consistency
+  const MAX_CHARS_PER_BATCH = 100000
+  let batchSize: number
+
+  if (totalLength <= MAX_CHARS_PER_BATCH) {
+    // Send entire chapter in one batch for maximum context
+    batchSize = textNodes.length
+    console.log(
+      `Chapter is ${totalLength} chars - sending as single batch for full context`,
+    )
+  } else {
+    // For very long chapters, use larger batches (100 nodes instead of old 20)
+    batchSize = 100
+    console.log(
+      `Chapter is ${totalLength} chars - using batches of ${batchSize} nodes`,
+    )
+  }
+
   for (let i = 0; i < textNodes.length; i += batchSize) {
     const batch = textNodes.slice(i, Math.min(i + batchSize, textNodes.length))
 

@@ -1,4 +1,4 @@
-import { atom, useAtom } from 'jotai'
+import { atom, useAtom, type SetStateAction } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
 import { RenditionSpread } from '@flow/epubjs/types/rendition'
@@ -21,7 +21,10 @@ export interface TranslationJob {
 
 export const activeTranslationAtom = atom<TranslationJob | null>(null)
 
-export function useActiveTranslation() {
+export function useActiveTranslation(): [
+  TranslationJob | null,
+  (update: SetStateAction<TranslationJob | null>) => void,
+] {
   return useAtom(activeTranslationAtom)
 }
 
