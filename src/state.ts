@@ -8,6 +8,42 @@ export const navbarAtom = atom<boolean>(false)
 export interface Settings extends TypographyConfiguration {
   theme?: ThemeConfiguration
   enableTextSelectionMenu?: boolean
+  ai?: AIConfiguration
+}
+
+export type AIProvider = 'anthropic' | 'openai'
+
+export interface AIConfiguration {
+  provider?: AIProvider
+  apiToken?: string // Encrypted API token
+  model?: string
+  instructions?: string
+}
+
+export const AI_PROVIDERS: Record<
+  AIProvider,
+  { name: string; models: { id: string; name: string }[] }
+> = {
+  anthropic: {
+    name: 'Anthropic',
+    models: [
+      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku' },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+      { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
+      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
+    ],
+  },
+  openai: {
+    name: 'OpenAI',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o' },
+      { id: 'gpt-4o-mini', name: 'GPT-4o mini' },
+      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+      { id: 'gpt-4', name: 'GPT-4' },
+      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+    ],
+  },
 }
 
 export interface TypographyConfiguration {

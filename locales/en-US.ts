@@ -56,8 +56,16 @@ export default {
   'settings.cache.clear': 'Clear',
   'settings.text_selection_menu': 'Text Selection Menu',
   'settings.text_selection_menu.enable': 'Enable',
+  'settings.ai.title': 'AI Translation',
+  'settings.ai.provider': 'Provider',
+  'settings.ai.api_token': 'API Token',
+  'settings.ai.model': 'Model',
+  'settings.ai.instructions': 'Translation Instructions',
+  'settings.ai.instructions_placeholder':
+    'Optional: Add custom instructions for the AI translator',
 
   'menu.copy': 'Copy',
+  'menu.translate': 'Translate Book',
   'menu.search_in_book': 'Search in book',
   'menu.annotate': 'Annotate',
   'menu.define': 'Define',

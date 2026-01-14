@@ -56,8 +56,16 @@ export default {
   'settings.cache.clear': 'クリア',
   'settings.text_selection_menu': 'テキスト選択メニュー',
   'settings.text_selection_menu.enable': '有効化',
+  'settings.ai.title': 'AI翻訳',
+  'settings.ai.provider': 'プロバイダー',
+  'settings.ai.api_token': 'APIトークン',
+  'settings.ai.model': 'モデル',
+  'settings.ai.instructions': '翻訳指示',
+  'settings.ai.instructions_placeholder':
+    'オプション：AI翻訳者へのカスタム指示を追加',
 
   'menu.copy': 'コピー',
+  'menu.translate': '本を翻訳',
   'menu.search_in_book': '本を検索',
   'menu.annotate': '注釈',
   'menu.define': '定義',

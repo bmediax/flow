@@ -12,13 +12,16 @@ import {
   MdCheckCircle,
   MdOutlineFileDownload,
   MdOutlineShare,
+  MdTranslate,
 } from 'react-icons/md'
 import { useSet } from 'react-use'
 import { usePrevious } from 'react-use'
 
 import { Button, DropZone, ReaderGridView, TextField } from '../components'
 import { type BookRecord, type CoverRecord, db } from '../db'
-import { addFile, fetchBook, handleFiles } from '../file'
+import { addBook, addFile, fetchBook, handleFiles } from '../file'
+import { translateEpub, type TranslationResult } from '../translate'
+import { useSettings } from '../state'
 import {
   useDisablePinchZooming,
   useLibrary,
@@ -377,6 +380,14 @@ const Book: React.FC<BookProps> = ({
   toggle,
 }) => {
   const remoteFiles = useRemoteFiles()
+  const [settings] = useSettings()
+  const [translating, setTranslating] = useState(false)
+  const [translationProgress, setTranslationProgress] = useState<{
+    current: number
+    total: number
+  } | null>(null)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editedName, setEditedName] = useState(book.name)
 
   const router = useRouter()
   const mobile = useMobile()
@@ -385,6 +396,100 @@ const Book: React.FC<BookProps> = ({
   const remoteFile = remoteFiles.data?.find((f) => f.name === book.name)
 
   const Icon = selected ? MdCheckBox : MdCheckBoxOutlineBlank
+
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!select && !translating) {
+      setIsEditingName(true)
+      setEditedName(book.name)
+    }
+  }
+
+  const handleNameSave = async () => {
+    if (editedName.trim() && editedName !== book.name) {
+      try {
+        await db?.books.update(book.id, { name: editedName.trim() })
+      } catch (error) {
+        console.error('Failed to update book name:', error)
+        alert('Failed to update book name')
+      }
+    }
+    setIsEditingName(false)
+  }
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleNameSave()
+    } else if (e.key === 'Escape') {
+      setIsEditingName(false)
+      setEditedName(book.name)
+    }
+  }
+
+  const handleTranslate = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    // Validate AI settings
+    if (!settings.ai?.provider || !settings.ai?.apiToken || !settings.ai?.model) {
+      alert(
+        'Please configure AI settings in Settings first:\n\n' +
+          '1. Select an AI provider (Anthropic or OpenAI)\n' +
+          '2. Enter your API token\n' +
+          '3. Select a model',
+      )
+      return
+    }
+
+    const providerName = settings.ai.provider === 'anthropic' ? 'Anthropic' : 'OpenAI'
+    const confirmed = confirm(
+      `This will create a translated copy of "${book.name}" using ${providerName}.\n\n` +
+        'This may take several minutes depending on book length.\n\n' +
+        'Continue?',
+    )
+    if (!confirmed) return
+
+    setTranslating(true)
+    setTranslationProgress({ current: 0, total: 1 })
+
+    try {
+      // Get the original file
+      const fileRecord = await db?.files.get(book.id)
+      if (!fileRecord) {
+        alert('Book file not found. Please re-import the book.')
+        setTranslating(false)
+        setTranslationProgress(null)
+        return
+      }
+
+      // Translate the ePub
+      const result = await translateEpub(
+        fileRecord.file,
+        settings.ai,
+        (progress) => {
+          setTranslationProgress({
+            current: progress.current,
+            total: progress.total,
+          })
+        },
+      )
+
+      // Add the translated book to the library
+      await addBook(result.file)
+
+      alert(
+        `Translation completed!\n\n` +
+          `"${result.translatedTitle}" has been added to your library.`,
+      )
+    } catch (error) {
+      console.error('Translation failed:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Translation failed:\n\n${errorMessage}`)
+    } finally {
+      setTranslating(false)
+      setTranslationProgress(null)
+    }
+  }
 
   return (
     <div className="relative flex flex-col">
@@ -402,13 +507,27 @@ const Book: React.FC<BookProps> = ({
       >
         <div
           className={clsx(
-            'absolute bottom-0 h-1 bg-blue-500',
-            loading && 'progress-bit w-[5%]',
+            'absolute bottom-0 h-1',
+            translating ? 'bg-green-500' : 'bg-blue-500',
+            loading && !translating && 'progress-bit w-[5%]',
           )}
+          style={
+            translating && translationProgress
+              ? {
+                  width: `${(translationProgress.current / translationProgress.total) * 100}%`,
+                  transition: 'width 0.3s ease-in-out',
+                }
+              : undefined
+          }
         />
-        {book.percentage !== undefined && (
+        {book.percentage !== undefined && !translating && (
           <div className="typescale-body-large absolute right-0 bg-gray-500/60 px-2 text-gray-100">
             {(book.percentage * 100).toFixed()}%
+          </div>
+        )}
+        {translating && translationProgress && (
+          <div className="typescale-body-small absolute right-0 top-0 bg-green-500/80 px-2 text-white">
+            Translating {Math.round((translationProgress.current / translationProgress.total) * 100)}%
           </div>
         )}
         <img
@@ -428,21 +547,44 @@ const Book: React.FC<BookProps> = ({
             />
           </div>
         )}
+        {!select && !translating && (
+          <button
+            className="absolute bottom-1 left-1 rounded bg-surface/80 p-1 hover:bg-surface"
+            onClick={handleTranslate}
+            title="Translate book with AI"
+          >
+            <MdTranslate size={20} className="text-on-surface-variant" />
+          </button>
+        )}
       </div>
 
-      <div
-        className="line-clamp-2 text-on-surface-variant typescale-body-small lg:typescale-body-medium mt-2 w-full"
-        title={book.name}
-      >
-        <MdCheckCircle
-          className={clsx(
-            'mr-1 mb-0.5 inline',
-            remoteFile ? 'text-tertiary' : 'text-surface-variant',
-          )}
-          size={16}
+      {isEditingName ? (
+        <input
+          type="text"
+          value={editedName}
+          onChange={(e) => setEditedName(e.target.value)}
+          onBlur={handleNameSave}
+          onKeyDown={handleNameKeyDown}
+          className="text-on-surface-variant typescale-body-small lg:typescale-body-medium mt-2 w-full rounded border border-outline bg-surface px-2 py-1"
+          autoFocus
+          onClick={(e) => e.stopPropagation()}
         />
-        {book.name}
-      </div>
+      ) : (
+        <div
+          className="line-clamp-2 text-on-surface-variant typescale-body-small lg:typescale-body-medium mt-2 w-full cursor-pointer hover:text-on-surface"
+          title={book.name}
+          onClick={handleNameClick}
+        >
+          <MdCheckCircle
+            className={clsx(
+              'mr-1 mb-0.5 inline',
+              remoteFile ? 'text-tertiary' : 'text-surface-variant',
+            )}
+            size={16}
+          />
+          {book.name}
+        </div>
+      )}
     </div>
   )
 }
