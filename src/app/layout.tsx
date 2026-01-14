@@ -4,6 +4,7 @@ import 'react-photo-view/dist/react-photo-view.css'
 import type { Metadata, Viewport } from 'next'
 
 import { Providers } from './providers'
+import { TranslationProgressBar } from '@/components/TranslationProgressBar'
 
 const background = {
   light: 'white',
@@ -80,7 +81,10 @@ export default function RootLayout({
             />
           </noscript>
         )}
-        <Providers>{children}</Providers>
+        <Providers>
+          <TranslationProgressBar />
+          {children}
+        </Providers>
       </body>
     </html>
   )

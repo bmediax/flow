@@ -21,7 +21,7 @@ import { Button, DropZone, ReaderGridView, TextField } from '../components'
 import { type BookRecord, type CoverRecord, db } from '../db'
 import { addBook, addFile, fetchBook, handleFiles } from '../file'
 import { translateEpub, type TranslationResult } from '../translate'
-import { useSettings } from '../state'
+import { useSettings, useActiveTranslation } from '../state'
 import {
   useDisablePinchZooming,
   useLibrary,
@@ -381,13 +381,13 @@ const Book: React.FC<BookProps> = ({
 }) => {
   const remoteFiles = useRemoteFiles()
   const [settings] = useSettings()
-  const [translating, setTranslating] = useState(false)
-  const [translationProgress, setTranslationProgress] = useState<{
-    current: number
-    total: number
-  } | null>(null)
+  const [activeTranslation, setActiveTranslation] = useActiveTranslation()
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(book.name)
+
+  // Check if this book is currently being translated
+  const translating = activeTranslation?.bookId === book.id
+  const translationProgress = translating ? activeTranslation.progress : null
 
   const router = useRouter()
   const mobile = useMobile()
@@ -430,6 +430,12 @@ const Book: React.FC<BookProps> = ({
   const handleTranslate = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
+    // Check if there's already an active translation
+    if (activeTranslation) {
+      alert('A translation is already in progress. Please wait for it to complete.')
+      return
+    }
+
     // Validate AI settings
     if (!settings.ai?.provider || !settings.ai?.apiToken || !settings.ai?.model) {
       alert(
@@ -445,50 +451,60 @@ const Book: React.FC<BookProps> = ({
     const confirmed = confirm(
       `This will create a translated copy of "${book.name}" using ${providerName}.\n\n` +
         'This may take several minutes depending on book length.\n\n' +
+        'You can navigate away and the translation will continue in the background.\n\n' +
         'Continue?',
     )
     if (!confirmed) return
 
-    setTranslating(true)
-    setTranslationProgress({ current: 0, total: 1 })
+    // Initialize global translation state
+    const startTime = Date.now()
+    setActiveTranslation({
+      bookId: book.id,
+      bookTitle: book.name,
+      progress: { current: 0, total: 1, currentSection: 'Starting...' },
+      startTime,
+    })
 
-    try {
-      // Get the original file
-      const fileRecord = await db?.files.get(book.id)
-      if (!fileRecord) {
-        alert('Book file not found. Please re-import the book.')
-        setTranslating(false)
-        setTranslationProgress(null)
-        return
+    // Run translation in background (don't await here)
+    ;(async () => {
+      try {
+        // Get the original file
+        const fileRecord = await db?.files.get(book.id)
+        if (!fileRecord) {
+          alert('Book file not found. Please re-import the book.')
+          setActiveTranslation(null)
+          return
+        }
+
+        // Translate the ePub
+        const result = await translateEpub(
+          fileRecord.file,
+          settings.ai,
+          (progress) => {
+            setActiveTranslation({
+              bookId: book.id,
+              bookTitle: book.name,
+              progress,
+              startTime,
+            })
+          },
+        )
+
+        // Add the translated book to the library
+        await addBook(result.file)
+
+        alert(
+          `Translation completed!\n\n` +
+            `"${result.translatedTitle}" has been added to your library.`,
+        )
+      } catch (error) {
+        console.error('Translation failed:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        alert(`Translation failed:\n\n${errorMessage}`)
+      } finally {
+        setActiveTranslation(null)
       }
-
-      // Translate the ePub
-      const result = await translateEpub(
-        fileRecord.file,
-        settings.ai,
-        (progress) => {
-          setTranslationProgress({
-            current: progress.current,
-            total: progress.total,
-          })
-        },
-      )
-
-      // Add the translated book to the library
-      await addBook(result.file)
-
-      alert(
-        `Translation completed!\n\n` +
-          `"${result.translatedTitle}" has been added to your library.`,
-      )
-    } catch (error) {
-      console.error('Translation failed:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      alert(`Translation failed:\n\n${errorMessage}`)
-    } finally {
-      setTranslating(false)
-      setTranslationProgress(null)
-    }
+    })()
   }
 
   return (

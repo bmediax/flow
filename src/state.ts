@@ -5,6 +5,26 @@ import { RenditionSpread } from '@flow/epubjs/types/rendition'
 
 export const navbarAtom = atom<boolean>(false)
 
+// Global translation state
+export interface TranslationProgress {
+  total: number
+  current: number
+  currentSection: string
+}
+
+export interface TranslationJob {
+  bookId: string
+  bookTitle: string
+  progress: TranslationProgress
+  startTime: number
+}
+
+export const activeTranslationAtom = atom<TranslationJob | null>(null)
+
+export function useActiveTranslation() {
+  return useAtom(activeTranslationAtom)
+}
+
 export interface Settings extends TypographyConfiguration {
   theme?: ThemeConfiguration
   enableTextSelectionMenu?: boolean
