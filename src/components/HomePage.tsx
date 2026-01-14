@@ -490,8 +490,11 @@ const Book: React.FC<BookProps> = ({
           },
         )
 
-        // Add the translated book to the library
-        await addBook(result.file)
+        // Add the translated book to the library with translation metadata
+        await addBook(result.file, {
+          translatedFrom: book.id,
+          originalLanguage: book.metadata.language || 'unknown',
+        })
 
         alert(
           `Translation completed!\n\n` +
@@ -544,6 +547,12 @@ const Book: React.FC<BookProps> = ({
         {translating && translationProgress && (
           <div className="typescale-body-small absolute right-0 top-0 bg-green-500/80 px-2 text-white">
             Translating {Math.round((translationProgress.current / translationProgress.total) * 100)}%
+          </div>
+        )}
+        {book.translatedFrom && !translating && (
+          <div className="typescale-body-small absolute left-0 top-0 flex items-center gap-1 bg-blue-500/80 px-2 py-0.5 text-white">
+            <MdTranslate size={14} />
+            <span>Translated</span>
           </div>
         )}
         <img

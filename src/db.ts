@@ -32,6 +32,8 @@ export interface BookRecord {
   configuration?: {
     typography?: TypographyConfiguration
   }
+  translatedFrom?: string // ID of the original book if this is a translation
+  originalLanguage?: string // Language of the original book
 }
 
 export class DB extends Dexie {
@@ -43,6 +45,11 @@ export class DB extends Dexie {
 
   constructor(name: string) {
     super(name)
+
+    this.version(6).stores({
+      books:
+        'id, name, size, metadata, createdAt, updatedAt, cfi, percentage, definitions, annotations, configuration, translatedFrom, originalLanguage',
+    })
 
     this.version(5).stores({
       books:

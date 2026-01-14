@@ -491,7 +491,9 @@ const ReaderPaneFooter: React.FC<FooterProps> = ({ tab }) => {
         <>
           <div>{location?.start.href}</div>
           <div className="flex items-center gap-2">
-            <div>{((book.percentage ?? 0) * 100).toFixed()}%</div>
+            <div>
+              {location?.start.displayed.page}/{location?.start.displayed.total}
+            </div>
             <button
               onClick={toggleFormat}
               className="text-gray-500 hover:text-gray-400"
