@@ -274,29 +274,58 @@ async function translateDocument(
   const totalText = textNodes.map((node) => node.textContent).join('')
   const totalLength = totalText.length
 
-  // Smart batching: try to send entire chapter at once for better context
-  // Only batch if chapter is extremely long (>100k chars ≈ 25k tokens)
-  // This gives AI full chapter context for better translation consistency
-  const MAX_CHARS_PER_BATCH = 100000
-  let batchSize: number
+  // Improved batching strategy based on character count for better efficiency
+  // Target 60-80k chars per batch (≈15-20k tokens) for optimal API usage
+  // Modern AI models handle large context well, and bigger batches = better context + fewer API calls
+  const MAX_CHARS_PER_BATCH = 80000
+  const MIN_CHARS_PER_BATCH = 60000
 
   if (totalLength <= MAX_CHARS_PER_BATCH) {
     // Send entire chapter in one batch for maximum context
-    batchSize = textNodes.length
     console.log(
       `Chapter is ${totalLength} chars - sending as single batch for full context`,
     )
   } else {
-    // For very long chapters, use larger batches (100 nodes instead of old 20)
-    batchSize = 100
     console.log(
-      `Chapter is ${totalLength} chars - using batches of ${batchSize} nodes`,
+      `Chapter is ${totalLength} chars - batching by ${MIN_CHARS_PER_BATCH}-${MAX_CHARS_PER_BATCH} chars per request`,
     )
   }
 
-  for (let i = 0; i < textNodes.length; i += batchSize) {
-    const batch = textNodes.slice(i, Math.min(i + batchSize, textNodes.length))
+  // Create batches based on character count, not node count
+  const batches: Text[][] = []
+  let currentBatch: Text[] = []
+  let currentBatchSize = 0
 
+  for (const node of textNodes) {
+    const nodeText = node.textContent || ''
+    const nodeLength = nodeText.length
+
+    // If adding this node would exceed MAX or we have enough chars, start new batch
+    if (
+      currentBatch.length > 0 &&
+      (currentBatchSize + nodeLength > MAX_CHARS_PER_BATCH ||
+        (currentBatchSize >= MIN_CHARS_PER_BATCH &&
+          currentBatchSize + nodeLength > MAX_CHARS_PER_BATCH * 0.9))
+    ) {
+      batches.push(currentBatch)
+      currentBatch = []
+      currentBatchSize = 0
+    }
+
+    currentBatch.push(node)
+    currentBatchSize += nodeLength
+  }
+
+  // Add the last batch if it has content
+  if (currentBatch.length > 0) {
+    batches.push(currentBatch)
+  }
+
+  console.log(
+    `Created ${batches.length} batches, avg ${Math.round(totalLength / batches.length)} chars per batch`,
+  )
+
+  for (const batch of batches) {
     // Combine texts with delimiter
     const combinedText = batch
       .map((node) => node.textContent)
