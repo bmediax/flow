@@ -22,7 +22,7 @@ export function TranslationProgressBar() {
       </div>
       <div className="bg-surface-container px-4 py-1 text-center typescale-body-small">
         <span className="text-on-surface">
-          Translating "{bookTitle}" - {Math.round(percentage)}% (
+          Translating &ldquo;{bookTitle}&rdquo; - {Math.round(percentage)}% (
           {progress.currentSection})
         </span>
       </div>
