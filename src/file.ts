@@ -223,7 +223,13 @@ export async function handleFiles(files: Iterable<File>) {
   return newBooks
 }
 
-export async function addBook(file: File) {
+export async function addBook(
+  file: File,
+  options?: {
+    translatedFrom?: string
+    originalLanguage?: string
+  },
+) {
   const epub = await fileToEpub(file)
   const metadata = await epub.loaded.metadata
 
@@ -235,6 +241,7 @@ export async function addBook(file: File) {
     createdAt: Date.now(),
     definitions: [],
     annotations: [],
+    ...options,
   }
   db?.books.add(book)
   addFile(book.id, file, epub)
