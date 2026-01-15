@@ -157,6 +157,16 @@ const AISettings: React.FC = () => {
     })
   }
 
+  const handleTargetLanguageChange = (value: string) => {
+    setSettings({
+      ...settings,
+      ai: {
+        ...settings.ai,
+        targetLanguage: value,
+      },
+    })
+  }
+
   if (isLoading) {
     return null
   }
@@ -211,6 +221,38 @@ const AISettings: React.FC = () => {
           placeholder={t('instructions_placeholder')}
           className="h-24"
         />
+        <div>
+          <label className="typescale-body-medium text-on-surface-variant mb-1 block">
+            {t('target_language')}
+          </label>
+          <Select
+            value={settings.ai?.targetLanguage ?? 'English'}
+            onChange={(e) => handleTargetLanguageChange(e.target.value)}
+          >
+            <option value="English">English</option>
+            <option value="Spanish">Español</option>
+            <option value="French">Français</option>
+            <option value="German">Deutsch</option>
+            <option value="Italian">Italiano</option>
+            <option value="Portuguese">Português</option>
+            <option value="Russian">Русский</option>
+            <option value="Japanese">日本語</option>
+            <option value="Korean">한국어</option>
+            <option value="Chinese (Simplified)">简体中文</option>
+            <option value="Chinese (Traditional)">繁體中文</option>
+            <option value="Arabic">العربية</option>
+            <option value="Hindi">हिन्दी</option>
+            <option value="Dutch">Nederlands</option>
+            <option value="Polish">Polski</option>
+            <option value="Turkish">Türkçe</option>
+            <option value="Vietnamese">Tiếng Việt</option>
+            <option value="Thai">ไทย</option>
+            <option value="Swedish">Svenska</option>
+            <option value="Danish">Dansk</option>
+            <option value="Norwegian">Norsk</option>
+            <option value="Finnish">Suomi</option>
+          </Select>
+        </div>
       </div>
     </Item>
   )

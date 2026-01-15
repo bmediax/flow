@@ -62,6 +62,7 @@ export default {
   'settings.ai.model': '模型',
   'settings.ai.instructions': '翻译说明',
   'settings.ai.instructions_placeholder': '可选：为 AI 翻译器添加自定义说明',
+  'settings.ai.target_language': '目标语言',
 
   'menu.copy': '复制',
   'menu.translate': '翻译书籍',

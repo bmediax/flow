@@ -63,6 +63,7 @@ export default {
   'settings.ai.instructions': 'Translation Instructions',
   'settings.ai.instructions_placeholder':
     'Optional: Add custom instructions for the AI translator',
+  'settings.ai.target_language': 'Target Language',
 
   'menu.copy': 'Copy',
   'menu.translate': 'Translate Book',

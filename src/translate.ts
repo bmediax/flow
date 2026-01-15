@@ -41,10 +41,15 @@ async function translateWithAnthropic(
   apiToken: string,
   model: string,
   instructions?: string,
+  targetLanguage?: string,
 ): Promise<string> {
+  const languageInstruction = targetLanguage
+    ? `Translate the following text to ${targetLanguage}.`
+    : 'Translate the following text.'
+
   const systemPrompt = instructions
-    ? `You are a professional translator. ${instructions}`
-    : 'You are a professional translator. Translate the following text while preserving formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.'
+    ? `You are a professional translator. ${languageInstruction} ${instructions} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
+    : `You are a professional translator. ${languageInstruction} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -132,10 +137,15 @@ async function translateWithOpenAI(
   apiToken: string,
   model: string,
   instructions?: string,
+  targetLanguage?: string,
 ): Promise<string> {
+  const languageInstruction = targetLanguage
+    ? `Translate the following text to ${targetLanguage}.`
+    : 'Translate the following text.'
+
   const systemPrompt = instructions
-    ? `You are a professional translator. ${instructions} Translate the following text while preserving formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
-    : 'You are a professional translator. Translate the following text while preserving formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.'
+    ? `You are a professional translator. ${languageInstruction} ${instructions} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
+    : `You are a professional translator. ${languageInstruction} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -227,13 +237,14 @@ async function translateText(
   apiToken: string,
   model: string,
   instructions?: string,
+  targetLanguage?: string,
 ): Promise<string> {
   if (!text.trim()) return text
 
   if (provider === 'anthropic') {
-    return translateWithAnthropic(text, apiToken, model, instructions)
+    return translateWithAnthropic(text, apiToken, model, instructions, targetLanguage)
   } else {
-    return translateWithOpenAI(text, apiToken, model, instructions)
+    return translateWithOpenAI(text, apiToken, model, instructions, targetLanguage)
   }
 }
 
@@ -247,6 +258,7 @@ async function translateDocument(
   apiToken: string,
   model: string,
   instructions?: string,
+  targetLanguage?: string,
 ): Promise<void> {
   // Collect all text nodes
   const textNodes: Text[] = []
@@ -343,6 +355,7 @@ async function translateDocument(
         apiToken,
         model,
         batchInstructions,
+        targetLanguage,
       )
 
       // Split back using the delimiter
@@ -513,6 +526,7 @@ export async function translateEpub(
         apiToken,
         model,
         aiConfig.instructions,
+        aiConfig.targetLanguage,
       )
     } catch (error) {
       console.error('Failed to translate title, using original:', error)
@@ -587,6 +601,7 @@ export async function translateEpub(
             apiToken,
             model,
             aiConfig.instructions,
+            aiConfig.targetLanguage,
           )
 
           // Serialize back to XML

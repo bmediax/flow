@@ -63,6 +63,7 @@ export default {
   'settings.ai.instructions': '翻訳指示',
   'settings.ai.instructions_placeholder':
     'オプション：AI翻訳者へのカスタム指示を追加',
+  'settings.ai.target_language': '翻訳先言語',
 
   'menu.copy': 'コピー',
   'menu.translate': '本を翻訳',

@@ -41,6 +41,7 @@ export interface AIConfiguration {
   apiToken?: string // Encrypted API token
   model?: string
   instructions?: string
+  targetLanguage?: string // Target language for translation
 }
 
 export const AI_PROVIDERS: Record<
