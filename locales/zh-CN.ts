@@ -38,6 +38,8 @@ export default {
   'typography.font_weight': '字重',
   'typography.line_height': '行高',
   'typography.zoom': '缩放',
+  'typography.container_padding': '容器内边距',
+  'typography.column_spacing': '列间距',
 
   'theme.title': '颜色主题',
   'theme.source_color': '源色',

@@ -38,6 +38,8 @@ export default {
   'typography.font_weight': 'Font Weight',
   'typography.line_height': 'Line Height',
   'typography.zoom': 'Zoom',
+  'typography.container_padding': 'Container Padding',
+  'typography.column_spacing': 'Column Spacing',
 
   'theme.title': 'Theme',
   'theme.source_color': 'Source Color',

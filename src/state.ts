@@ -77,6 +77,8 @@ export interface TypographyConfiguration {
   lineHeight?: number
   spread?: RenditionSpread
   zoom?: number
+  containerPadding?: number
+  columnSpacing?: number
 }
 
 interface ThemeConfiguration {

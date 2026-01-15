@@ -30,7 +30,16 @@ export const TypographyView: React.FC<PaneViewProps> = (props) => {
 
   const [localFonts, setLocalFonts] = useState<string[]>()
 
-  const { fontFamily, fontSize, fontWeight, lineHeight, zoom, spread } =
+  const {
+    fontFamily,
+    fontSize,
+    fontWeight,
+    lineHeight,
+    zoom,
+    spread,
+    containerPadding,
+    columnSpacing,
+  } =
     scope === TypographyScope.Book
       ? focusedBookTab?.book.configuration?.typography ?? defaultSettings
       : settings
@@ -169,6 +178,24 @@ export const TypographyView: React.FC<PaneViewProps> = (props) => {
           defaultValue={zoom}
           onChange={(v) => {
             setTypography('zoom', v || undefined)
+          }}
+        />
+        <NumberField
+          name={t('container_padding')}
+          min={0}
+          max={100}
+          defaultValue={containerPadding}
+          onChange={(v) => {
+            setTypography('containerPadding', v || undefined)
+          }}
+        />
+        <NumberField
+          name={t('column_spacing')}
+          min={0}
+          max={100}
+          defaultValue={columnSpacing}
+          onChange={(v) => {
+            setTypography('columnSpacing', v || undefined)
           }}
         />
       </Pane>
