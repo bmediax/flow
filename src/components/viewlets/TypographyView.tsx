@@ -37,7 +37,8 @@ export const TypographyView: React.FC<PaneViewProps> = (props) => {
     lineHeight,
     zoom,
     spread,
-    containerPadding,
+    containerPaddingX,
+    containerPaddingY,
     columnSpacing,
   } =
     scope === TypographyScope.Book
@@ -181,12 +182,21 @@ export const TypographyView: React.FC<PaneViewProps> = (props) => {
           }}
         />
         <NumberField
-          name={t('container_padding')}
+          name={t('container_padding_x')}
           min={0}
           max={100}
-          defaultValue={containerPadding}
+          defaultValue={containerPaddingX}
           onChange={(v) => {
-            setTypography('containerPadding', v || undefined)
+            setTypography('containerPaddingX', v || undefined)
+          }}
+        />
+        <NumberField
+          name={t('container_padding_y')}
+          min={0}
+          max={100}
+          defaultValue={containerPaddingY}
+          onChange={(v) => {
+            setTypography('containerPaddingY', v || undefined)
           }}
         />
         <NumberField

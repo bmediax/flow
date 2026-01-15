@@ -38,7 +38,8 @@ export default {
   'typography.font_weight': 'フォントウェイト',
   'typography.line_height': '行の高さ',
   'typography.zoom': 'ズーム',
-  'typography.container_padding': 'コンテナパディング',
+  'typography.container_padding_x': 'コンテナ水平パディング',
+  'typography.container_padding_y': 'コンテナ垂直パディング',
   'typography.column_spacing': 'カラムスペース',
 
   'theme.title': 'テーマ',

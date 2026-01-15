@@ -77,7 +77,8 @@ export interface TypographyConfiguration {
   lineHeight?: number
   spread?: RenditionSpread
   zoom?: number
-  containerPadding?: number
+  containerPaddingX?: number
+  containerPaddingY?: number
   columnSpacing?: number
 }
 

@@ -42,15 +42,20 @@ export function updateCustomStyle(
 ) {
   if (!contents || !settings) return
 
-  const { zoom, containerPadding, columnSpacing, ...other } = settings
+  const { zoom, containerPaddingX, containerPaddingY, columnSpacing, ...other } = settings
   let css = `a, article, cite, div, li, p, pre, span, table, body {
     ${mapToCss(other)}
   }`
 
   // Add container padding and column spacing as separate body rules
   const bodyStyles: CSSProperties = {}
-  if (containerPadding !== undefined) {
-    bodyStyles.padding = `${containerPadding}px`
+  if (containerPaddingX !== undefined) {
+    bodyStyles.paddingLeft = `${containerPaddingX}px`
+    bodyStyles.paddingRight = `${containerPaddingX}px`
+  }
+  if (containerPaddingY !== undefined) {
+    bodyStyles.paddingTop = `${containerPaddingY}px`
+    bodyStyles.paddingBottom = `${containerPaddingY}px`
   }
   if (columnSpacing !== undefined) {
     bodyStyles.columnGap = `${columnSpacing}px`
