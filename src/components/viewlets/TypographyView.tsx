@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { useCallback, useRef, useState } from 'react'
 import { MdAdd, MdRemove } from 'react-icons/md'
+import { snapshot } from 'valtio'
 
 import { RenditionSpread } from '@flow/epubjs/types/rendition'
 import { useTranslation } from '@flow/reader/hooks'
@@ -51,11 +52,12 @@ export const TypographyView: React.FC<PaneViewProps> = (props) => {
       v: TypographyConfiguration[K],
     ) => {
       if (scope === TypographyScope.Book) {
+        const currentConfig = snapshot(reader.focusedBookTab?.book.configuration)
         reader.focusedBookTab?.updateBook({
           configuration: {
-            ...reader.focusedBookTab.book.configuration,
+            ...currentConfig,
             typography: {
-              ...reader.focusedBookTab.book.configuration?.typography,
+              ...currentConfig?.typography,
               [k]: v,
             },
           },
