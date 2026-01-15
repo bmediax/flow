@@ -20,6 +20,7 @@
     "@types/react-highlight-words": "^0.20.0",
     "@xmldom/xmldom": "^0.9.0",
     "clsx": "^2.1.0",
+    "convex": "1.31.4",
     "core-js": "^3.39.0",
     "dayjs": "^1.11.13",
     "dexie": "^4.0.10",
