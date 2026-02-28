@@ -41,20 +41,38 @@ import * as pages from "./pages";
 import { Tab } from "./Tab";
 import { TextSelectionMenu } from "./TextSelectionMenu";
 
+function isEditableElement(target: EventTarget | null): boolean {
+	if (!target || !(target instanceof HTMLElement)) return false;
+	const el = target as HTMLElement;
+	const tag = el.tagName?.toLowerCase();
+	if (tag === "input" || tag === "textarea" || tag === "select") return true;
+	if (el.isContentEditable === true) return true;
+	// Target might be inside an editable (e.g. React wrapper)
+	if (el.closest?.("input, textarea, select, [contenteditable='true']")) return true;
+	return false;
+}
+
 function handleKeyDown(tab?: BookTab) {
 	return (e: KeyboardEvent) => {
+		const target = e.target as HTMLElement | null;
+		const active = document.activeElement as HTMLElement | null;
+		if (isEditableElement(target) || isEditableElement(active)) return;
 		try {
 			switch (e.code) {
 				case "ArrowLeft":
 				case "ArrowUp":
 					tab?.prev();
+					e.preventDefault();
 					break;
 				case "ArrowRight":
 				case "ArrowDown":
 					tab?.next();
+					e.preventDefault();
 					break;
 				case "Space":
 					e.shiftKey ? tab?.prev() : tab?.next();
+					e.preventDefault();
+					break;
 			}
 		} catch {
 			// ignore `rendition is undefined` error
@@ -64,8 +82,13 @@ function handleKeyDown(tab?: BookTab) {
 
 export function ReaderGridView() {
 	const { groups } = useReaderSnapshot();
+	const focusedBookTab = reader.focusedBookTab;
 
-	useEventListener("keydown", handleKeyDown(reader.focusedBookTab));
+	// Only handle Space/arrows for book navigation when a book tab is focused; avoid capturing keys in Settings (e.g. translation instructions textarea)
+	useEventListener(
+		"keydown",
+		focusedBookTab ? handleKeyDown(focusedBookTab) : () => {},
+	);
 
 	if (!groups.length) return null;
 	return (
@@ -105,6 +128,7 @@ function ReaderGroup({ index }: ReaderGroupProps) {
       className="ReaderGroup flex w-full flex-1 flex-col overflow-hidden border-0 bg-transparent p-0 text-left focus:outline-none"
       onMouseDown={handleMouseDown}
       onKeyDown={(e) => {
+        if (isEditableElement(e.target)) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           reader.selectGroup(index);
