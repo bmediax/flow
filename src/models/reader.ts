@@ -88,6 +88,8 @@ export class BookTab extends BaseTab {
   results?: IMatch[]
   activeResultID?: string
   rendered = false
+  /** Set when the book file is missing or failed to load (e.g. removed or corrupted). */
+  loadError: string | null = null
 
   get container() {
     return this?.rendition?.manager?.container as HTMLDivElement | undefined
@@ -332,11 +334,25 @@ export class BookTab extends BaseTab {
   async render(el: HTMLDivElement) {
     if (el === this._el) return
     this._el = ref(el)
+    this.loadError = null
 
     const file = await db?.files.get(this.book.id)
-    if (!file) return
+    if (!file) {
+      this.loadError =
+        'Book file not found. It may have been removed from this device.'
+      return
+    }
 
-    this.epub = ref(await fileToEpub(file.file))
+    let epub: Book
+    try {
+      epub = await fileToEpub(file.file)
+    } catch (err) {
+      this.loadError =
+        err instanceof Error ? err.message : 'Failed to open the book file.'
+      return
+    }
+
+    this.epub = ref(epub)
 
     this.epub.loaded.navigation.then((nav) => {
       this.nav = nav

@@ -17,6 +17,11 @@ import {
 } from '@flow/reader/state'
 import { dbx, mapToToken, OAUTH_SUCCESS_MESSAGE } from '@flow/reader/sync'
 import { encrypt, decrypt } from '@flow/reader/crypto'
+import {
+  fetchOpenAIModels,
+  fetchAnthropicModels,
+  type AIModelOption,
+} from '@flow/reader/translate'
 
 import { Button } from '../Button'
 import { Checkbox, Select, TextField } from '../Form'
@@ -95,10 +100,12 @@ const AISettings: React.FC = () => {
   const [settings, setSettings] = useSettings()
   const [apiToken, setApiToken] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [availableModels, setAvailableModels] = useState<AIModelOption[]>([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [modelsError, setModelsError] = useState<string | null>(null)
   const t = useTranslation('settings.ai')
 
   const provider = (settings.ai?.provider ?? 'anthropic') as AIProvider
-  const availableModels = AI_PROVIDERS[provider].models
 
   // Decrypt API token on mount
   useEffect(() => {
@@ -112,15 +119,62 @@ const AISettings: React.FC = () => {
     loadApiToken()
   }, [settings.ai?.apiToken])
 
+  // Load available models when provider and API token are set
+  useEffect(() => {
+    if (!apiToken?.trim()) {
+      setAvailableModels([])
+      setModelsError(null)
+      return
+    }
+    let cancelled = false
+    setModelsLoading(true)
+    setModelsError(null)
+    const fetchModels =
+      provider === 'openai' ? fetchOpenAIModels : fetchAnthropicModels
+    fetchModels(apiToken)
+      .then((models) => {
+        if (!cancelled) {
+          setAvailableModels(models)
+          setModelsError(null)
+          setSettings((prev) => {
+            const currentModel = prev.ai?.model
+            const hasCurrent =
+              currentModel && models.some((m) => m.id === currentModel)
+            if (!hasCurrent && models.length > 0) {
+              return {
+                ...prev,
+                ai: {
+                  ...prev.ai,
+                  provider,
+                  model: models[0].id,
+                },
+              }
+            }
+            return prev
+          })
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setAvailableModels([])
+          setModelsError(err?.message ?? 'Failed to load models')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [provider, apiToken, setSettings])
+
   const handleProviderChange = (newProvider: AIProvider) => {
-    // Reset model when provider changes
-    const defaultModel = AI_PROVIDERS[newProvider].models[0].id
     setSettings({
       ...settings,
       ai: {
         ...settings.ai,
         provider: newProvider,
-        model: defaultModel,
+        model: undefined,
       },
     })
   }
@@ -202,16 +256,39 @@ const AISettings: React.FC = () => {
           <label className="typescale-body-medium text-on-surface-variant mb-1 block">
             {t('model')}
           </label>
-          <Select
-            value={settings.ai?.model ?? availableModels[0].id}
-            onChange={(e) => handleModelChange(e.target.value)}
-          >
-            {availableModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </Select>
+          {modelsLoading ? (
+            <p className="typescale-body-small text-on-surface-variant">
+              Loading models…
+            </p>
+          ) : modelsError ? (
+            <p className="typescale-body-small text-red-600 dark:text-red-400">
+              {modelsError}
+            </p>
+          ) : !apiToken?.trim() ? (
+            <p className="typescale-body-small text-on-surface-variant">
+              Enter API key to load available models
+            </p>
+          ) : availableModels.length === 0 ? (
+            <p className="typescale-body-small text-on-surface-variant">
+              No models available
+            </p>
+          ) : (
+            <Select
+              value={
+                settings.ai?.model &&
+                availableModels.some((m) => m.id === settings.ai?.model)
+                  ? settings.ai.model
+                  : availableModels[0]?.id ?? ''
+              }
+              onChange={(e) => handleModelChange(e.target.value)}
+            >
+              {availableModels.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </Select>
+          )}
         </div>
         <TextField
           as="textarea"

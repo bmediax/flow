@@ -1,32 +1,58 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+"use client";
+
+import React, { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
-  children?: ReactNode
+	children?: ReactNode;
+	/** Optional custom fallback UI. Receives error and reset callback. */
+	fallback?: (error: Error, reset: () => void) => ReactNode;
 }
 
 interface State {
-  hasError: boolean
+	hasError: boolean;
+	error: Error | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-  }
+	public state: State = {
+		hasError: false,
+		error: null,
+	};
 
-  public static getDerivedStateFromError(_: Error): State {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true }
-  }
+	public static getDerivedStateFromError(error: Error): Partial<State> {
+		return { hasError: true, error };
+	}
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo)
-  }
+	public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+		console.error("Uncaught error:", error, errorInfo);
+	}
 
-  public render() {
-    if (this.state.hasError) {
-      return <h1>Sorry.. there was an error</h1>
-    }
+	private reset = () => {
+		this.setState({ hasError: false, error: null });
+	};
 
-    return this.props.children
-  }
+	public render() {
+		if (this.state.hasError && this.state.error) {
+			if (this.props.fallback) {
+				return this.props.fallback(this.state.error, this.reset);
+			}
+			return (
+				<div className="bg-surface-container text-on-surface flex min-h-[200px] flex-col items-center justify-center gap-4 p-6 text-center">
+					<p className="typescale-title-medium">Something went wrong</p>
+					<p className="text-on-surface-variant typescale-body-small max-w-md">
+						{this.state.error.message}
+					</p>
+					<button
+						type="button"
+						onClick={this.reset}
+						className="bg-primary text-on-primary rounded px-4 py-2 typescale-label-large hover:opacity-90"
+					>
+						Try again
+					</button>
+				</div>
+			);
+		}
+
+		return this.props.children;
+	}
 }
