@@ -93,50 +93,69 @@ export async function fetchOpenAIModels(
 
 /**
  * Fetches the list of models available for the given Anthropic API key.
+ * Uses the documented headers and handles pagination so all models are returned.
  */
 export async function fetchAnthropicModels(
 	apiToken: string,
 ): Promise<AIModelOption[]> {
-	const response = await fetch("https://api.anthropic.com/v1/models", {
-		method: "GET",
-		headers: {
-			"x-api-key": apiToken,
-			"anthropic-version": "2023-06-01",
-		},
-	});
+	const allModels: AIModelOption[] = [];
+	let afterId: string | undefined;
 
-	if (!response.ok) {
-		const errorText = await response.text();
-		let errorMessage = "Unknown error";
-		try {
-			const errorData = JSON.parse(errorText);
-			errorMessage = errorData.error?.message || errorData.message || errorText;
-		} catch {
-			errorMessage = errorText;
-		}
-		if (response.status === 401) {
+	do {
+		const url = new URL("https://api.anthropic.com/v1/models");
+		url.searchParams.set("limit", "100");
+		if (afterId) url.searchParams.set("after_id", afterId);
+
+		const response = await fetch(url.toString(), {
+			method: "GET",
+			headers: {
+				"x-api-key": apiToken,
+				"anthropic-version": "2023-06-01",
+			},
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			let errorMessage = "Unknown error";
+			try {
+				const errorData = JSON.parse(errorText);
+				errorMessage =
+					errorData.error?.message || errorData.message || errorText;
+			} catch {
+				errorMessage = errorText;
+			}
+			if (response.status === 401) {
+				throw new TranslationError(
+					"Invalid API token. Please check your Anthropic API key in Settings.",
+					"INVALID_API_KEY",
+					401,
+				);
+			}
 			throw new TranslationError(
-				"Invalid API token. Please check your Anthropic API key in Settings.",
-				"INVALID_API_KEY",
-				401,
+				`Failed to load models (${response.status}): ${errorMessage}`,
+				"API_ERROR",
+				response.status,
 			);
 		}
-		throw new TranslationError(
-			`Failed to load models (${response.status}): ${errorMessage}`,
-			"API_ERROR",
-			response.status,
-		);
-	}
 
-	const data = await response.json();
-	const models: AIModelOption[] = (data.data ?? []).map(
-		(m: { id: string; display_name?: string }) => ({
-			id: m.id,
-			name: m.display_name || m.id,
-		}),
-	);
+		const data = (await response.json()) as {
+			data?: Array<{ id: string; display_name?: string }>;
+			last_id?: string;
+			has_more?: boolean;
+		};
+		const page = data.data ?? [];
+		for (const m of page) {
+			if (m?.id) {
+				allModels.push({
+					id: m.id,
+					name: m.display_name ?? m.id,
+				});
+			}
+		}
+		afterId = data.has_more ? data.last_id : undefined;
+	} while (afterId);
 
-	return models;
+	return allModels.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 /**
@@ -213,9 +232,10 @@ function handleAIError(error: unknown, provider: AIProvider): never {
 }
 
 /**
- * Translates text using the configured provider via Vercel AI SDK
+ * Server-side translation: calls the AI API. Use from API routes or server code.
+ * When called from the browser, use translateText() which proxies via /api/ai/translate.
  */
-async function translateText(
+export async function translateTextWithAI(
 	text: string,
 	provider: AIProvider,
 	apiToken: string,
@@ -245,6 +265,51 @@ async function translateText(
 	} catch (error) {
 		handleAIError(error, provider);
 	}
+}
+
+/**
+ * Translates text using the configured provider. In the browser, proxies via
+ * /api/ai/translate to avoid CORS; on the server, calls the AI directly.
+ */
+async function translateText(
+	text: string,
+	provider: AIProvider,
+	apiToken: string,
+	model: string,
+	instructions?: string,
+	targetLanguage?: string,
+): Promise<string> {
+	if (!text.trim()) return text;
+
+	if (typeof window !== "undefined") {
+		const res = await fetch("/api/ai/translate", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				text,
+				provider,
+				apiKey: apiToken,
+				model,
+				instructions,
+				targetLanguage,
+			}),
+		});
+		if (!res.ok) {
+			const data = (await res.json().catch(() => ({}))) as { error?: string };
+			throw new Error(data.error ?? `Translation failed (${res.status})`);
+		}
+		const data = (await res.json()) as { text: string };
+		return data.text;
+	}
+
+	return translateTextWithAI(
+		text,
+		provider,
+		apiToken,
+		model,
+		instructions,
+		targetLanguage,
+	);
 }
 
 /**
