@@ -3,6 +3,9 @@
  * Translates ePub files using Anthropic or OpenAI APIs and creates a new translated copy
  */
 
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
+import { APICallError, generateText } from "ai";
 import JSZip from "jszip";
 import { decrypt } from "./crypto";
 import { fileToEpub } from "./file";
@@ -75,8 +78,10 @@ export async function fetchOpenAIModels(
 	}
 
 	const data = await response.json();
+	// Filter to only chat-compatible models (gpt-*, o-series reasoning models, chatgpt-*)
+	const chatModelPattern = /^(gpt-?|o\d|chatgpt-)/i;
 	const models: AIModelOption[] = (data.data ?? [])
-		.filter((m: { id: string }) => m.id)
+		.filter((m: { id: string }) => m.id && chatModelPattern.test(m.id))
 		.map((m: { id: string }) => ({
 			id: m.id,
 			name: m.id.replace(/^gpt-/i, "GPT-").replace(/-/g, " "),
@@ -135,216 +140,80 @@ export async function fetchAnthropicModels(
 }
 
 /**
- * Translates text using Anthropic API
+ * Creates an AI model instance for the given provider
  */
-async function translateWithAnthropic(
-	text: string,
-	apiToken: string,
-	model: string,
-	instructions?: string,
-	targetLanguage?: string,
-): Promise<string> {
-	const languageInstruction = targetLanguage
-		? `Translate the following text to ${targetLanguage}.`
-		: "Translate the following text.";
-
-	const systemPrompt = instructions
-		? `You are a professional translator. ${languageInstruction} ${instructions} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
-		: `You are a professional translator. ${languageInstruction} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`;
-
-	try {
-		const response = await fetch("https://api.anthropic.com/v1/messages", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"x-api-key": apiToken,
-				"anthropic-version": "2023-06-01",
-			},
-			body: JSON.stringify({
-				model: model,
-				max_tokens: 16384,
-				messages: [
-					{
-						role: "user",
-						content: text,
-					},
-				],
-				system: systemPrompt,
-			}),
-		});
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			let errorMessage = "Unknown error";
-
-			try {
-				const errorData = JSON.parse(errorText);
-				errorMessage =
-					errorData.error?.message || errorData.message || errorText;
-			} catch {
-				errorMessage = errorText;
-			}
-
-			if (response.status === 401) {
-				throw new TranslationError(
-					"Invalid API token. Please check your Anthropic API key in Settings.",
-					"INVALID_API_KEY",
-					401,
-				);
-			} else if (response.status === 429) {
-				throw new TranslationError(
-					"Rate limit exceeded. Please try again in a few moments.",
-					"RATE_LIMIT",
-					429,
-				);
-			} else if (response.status === 400) {
-				throw new TranslationError(
-					`Invalid request: ${errorMessage}. Please check your model selection.`,
-					"INVALID_REQUEST",
-					400,
-				);
-			} else if (response.status === 403) {
-				throw new TranslationError(
-					`Model not available: ${errorMessage}. Choose a model from the list in Settings (only models your account can use are shown).`,
-					"MODEL_ACCESS_DENIED",
-					403,
-				);
-			} else {
-				throw new TranslationError(
-					`API error (${response.status}): ${errorMessage}`,
-					"API_ERROR",
-					response.status,
-				);
-			}
-		}
-
-		const data = await response.json();
-		return data.content[0].text;
-	} catch (error) {
-		if (error instanceof TranslationError) {
-			throw error;
-		}
-		if (error instanceof TypeError && error.message.includes("fetch")) {
-			throw new TranslationError(
-				"Network error. Please check your internet connection.",
-				"NETWORK_ERROR",
-			);
-		}
-		throw new TranslationError(
-			`Unexpected error: ${error instanceof Error ? error.message : "Unknown"}`,
-			"UNKNOWN_ERROR",
-		);
+function createModel(provider: AIProvider, apiToken: string, model: string) {
+	if (provider === "anthropic") {
+		const anthropic = createAnthropic({ apiKey: apiToken });
+		return anthropic(model);
+	} else {
+		const openai = createOpenAI({ apiKey: apiToken });
+		return openai(model);
 	}
 }
 
 /**
- * Translates text using OpenAI API
+ * Maps AI SDK errors to TranslationError
  */
-async function translateWithOpenAI(
-	text: string,
-	apiToken: string,
-	model: string,
-	instructions?: string,
-	targetLanguage?: string,
-): Promise<string> {
-	const languageInstruction = targetLanguage
-		? `Translate the following text to ${targetLanguage}.`
-		: "Translate the following text.";
+function handleAIError(error: unknown, provider: AIProvider): never {
+	if (error instanceof TranslationError) {
+		throw error;
+	}
 
-	const systemPrompt = instructions
-		? `You are a professional translator. ${languageInstruction} ${instructions} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
-		: `You are a professional translator. ${languageInstruction} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`;
+	const providerName = provider === "anthropic" ? "Anthropic" : "OpenAI";
 
-	try {
-		const response = await fetch("https://api.openai.com/v1/chat/completions", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${apiToken}`,
-			},
-			body: JSON.stringify({
-				model: model,
-				messages: [
-					{
-						role: "system",
-						content: systemPrompt,
-					},
-					{
-						role: "user",
-						content: text,
-					},
-				],
-				max_tokens: 16384,
-				temperature: 0.3,
-			}),
-		});
+	// Handle AI SDK APICallError with status codes
+	if (APICallError.isInstance(error)) {
+		const statusCode = error.statusCode;
 
-		if (!response.ok) {
-			const errorText = await response.text();
-			let errorMessage = "Unknown error";
-
-			try {
-				const errorData = JSON.parse(errorText);
-				errorMessage =
-					errorData.error?.message || errorData.message || errorText;
-			} catch {
-				errorMessage = errorText;
-			}
-
-			if (response.status === 401) {
-				throw new TranslationError(
-					"Invalid API token. Please check your OpenAI API key in Settings.",
-					"INVALID_API_KEY",
-					401,
-				);
-			} else if (response.status === 429) {
-				throw new TranslationError(
-					"Rate limit exceeded. Please try again in a few moments.",
-					"RATE_LIMIT",
-					429,
-				);
-			} else if (response.status === 400) {
-				throw new TranslationError(
-					`Invalid request: ${errorMessage}. Please check your model selection.`,
-					"INVALID_REQUEST",
-					400,
-				);
-			} else if (response.status === 403) {
-				throw new TranslationError(
-					`Model not available: ${errorMessage}. Choose a model from the list in Settings (only models your account can use are shown).`,
-					"MODEL_ACCESS_DENIED",
-					403,
-				);
-			} else {
-				throw new TranslationError(
-					`API error (${response.status}): ${errorMessage}`,
-					"API_ERROR",
-					response.status,
-				);
-			}
-		}
-
-		const data = await response.json();
-		return data.choices[0].message.content;
-	} catch (error) {
-		if (error instanceof TranslationError) {
-			throw error;
-		}
-		if (error instanceof TypeError && error.message.includes("fetch")) {
+		if (statusCode === 401) {
 			throw new TranslationError(
-				"Network error. Please check your internet connection.",
-				"NETWORK_ERROR",
+				`Invalid API token. Please check your ${providerName} API key in Settings.`,
+				"INVALID_API_KEY",
+				401,
 			);
 		}
+
+		if (statusCode === 429) {
+			throw new TranslationError(
+				"Rate limit exceeded. Please try again in a few moments.",
+				"RATE_LIMIT",
+				429,
+			);
+		}
+
+		if (statusCode === 403) {
+			throw new TranslationError(
+				"Model not available. Choose a model from the list in Settings (only models your account can use are shown).",
+				"MODEL_ACCESS_DENIED",
+				403,
+			);
+		}
+
 		throw new TranslationError(
-			`Unexpected error: ${error instanceof Error ? error.message : "Unknown"}`,
-			"UNKNOWN_ERROR",
+			`API error (${statusCode}): ${error.message}`,
+			"API_ERROR",
+			statusCode,
 		);
 	}
+
+	// Handle network/fetch errors
+	const errorMessage = error instanceof Error ? error.message : "Unknown error";
+	if (
+		errorMessage.toLowerCase().includes("network") ||
+		errorMessage.toLowerCase().includes("fetch")
+	) {
+		throw new TranslationError(
+			"Network error. Please check your internet connection.",
+			"NETWORK_ERROR",
+		);
+	}
+
+	throw new TranslationError(`API error: ${errorMessage}`, "API_ERROR");
 }
 
 /**
- * Translates text using the configured provider
+ * Translates text using the configured provider via Vercel AI SDK
  */
 async function translateText(
 	text: string,
@@ -356,22 +225,25 @@ async function translateText(
 ): Promise<string> {
 	if (!text.trim()) return text;
 
-	if (provider === "anthropic") {
-		return translateWithAnthropic(
-			text,
-			apiToken,
-			model,
-			instructions,
-			targetLanguage,
-		);
-	} else {
-		return translateWithOpenAI(
-			text,
-			apiToken,
-			model,
-			instructions,
-			targetLanguage,
-		);
+	const languageInstruction = targetLanguage
+		? `Translate the following text to ${targetLanguage}.`
+		: "Translate the following text.";
+
+	const systemPrompt = instructions
+		? `You are a professional translator. ${languageInstruction} ${instructions} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`
+		: `You are a professional translator. ${languageInstruction} Preserve formatting, HTML tags, and the overall meaning. Only return the translated text, nothing else.`;
+
+	try {
+		const result = await generateText({
+			model: createModel(provider, apiToken, model),
+			system: systemPrompt,
+			prompt: text,
+			maxOutputTokens: 16384,
+		});
+
+		return result.text;
+	} catch (error) {
+		handleAIError(error, provider);
 	}
 }
 

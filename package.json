@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "3.0.50",
+    "@ai-sdk/openai": "3.0.37",
     "@github/mini-throttle": "^2.1.0",
     "@kinde-oss/kinde-auth-nextjs": "^2.11.0",
     "@literal-ui/core": "0.0.13",
@@ -19,6 +21,7 @@
     "@types/localforage": "0.0.34",
     "@types/react-highlight-words": "^0.20.0",
     "@xmldom/xmldom": "^0.9.0",
+    "ai": "6.0.105",
     "clsx": "^2.1.0",
     "convex": "1.31.4",
     "core-js": "^3.39.0",
