@@ -459,13 +459,7 @@ function validateConfig(aiConfig: AIConfiguration): void {
 		);
 	}
 
-	if (!aiConfig.apiToken) {
-		throw new TranslationError(
-			"API token is required for translation. Please configure it in Settings.",
-			"MISSING_API_KEY",
-		);
-	}
-
+	// apiToken can be omitted when using server-side key (e.g. ANTHROPIC_API_KEY in env)
 	if (!aiConfig.model) {
 		throw new TranslationError(
 			"Model is required for translation. Please select a model in Settings.",

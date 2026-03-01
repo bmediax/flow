@@ -476,18 +476,21 @@ const Book: React.FC<BookProps> = ({
 			return;
 		}
 
-		// Validate AI settings
-		if (
-			!settings.ai?.provider ||
-			!settings.ai?.apiToken ||
-			!settings.ai?.model
-		) {
+		// Validate AI settings (API key can be omitted for Anthropic when using server env ANTHROPIC_API_KEY)
+		if (!settings.ai?.provider || !settings.ai?.model) {
 			alert(
 				"Please configure AI settings in Settings first:\n\n" +
 					"1. Select an AI provider (Anthropic or OpenAI)\n" +
-					"2. Enter your API token\n" +
-					"3. Select a model",
+					"2. Select a model\n" +
+					"3. Enter your API token (or set ANTHROPIC_API_KEY in .env for Anthropic)",
 			);
+			return;
+		}
+		if (
+			settings.ai.provider === "openai" &&
+			!settings.ai?.apiToken
+		) {
+			alert("Please enter your OpenAI API token in Settings.");
 			return;
 		}
 

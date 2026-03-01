@@ -8,8 +8,14 @@ export async function POST(request: Request) {
 		const body = await request.json();
 		const text = typeof body?.text === "string" ? body.text : "";
 		const provider = body?.provider as AIProvider | undefined;
-		const apiKey = typeof body?.apiKey === "string" ? body.apiKey.trim() : "";
+		let apiKey = typeof body?.apiKey === "string" ? body.apiKey.trim() : "";
 		const model = typeof body?.model === "string" ? body.model : "";
+
+		// Server-side fallback for development: use env key when client sends none
+		if (!apiKey && provider === "anthropic" && process.env.ANTHROPIC_API_KEY) {
+			apiKey = process.env.ANTHROPIC_API_KEY;
+		}
+
 		const instructions =
 			typeof body?.instructions === "string" ? body.instructions : undefined;
 		const targetLanguage =

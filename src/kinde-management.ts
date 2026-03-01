@@ -166,3 +166,56 @@ export async function updateUserProperties(
 		);
 	}
 }
+
+/** Kinde user property key for AI translation instructions. */
+export const AI_TRANSLATION_INSTRUCTIONS_KEY = "ai-translation-instructions";
+
+/**
+ * Fetches the ai-translation-instructions user property from Kinde.
+ */
+export async function getAiTranslationInstructions(
+	userId: string,
+): Promise<string | null> {
+	const token = await getManagementToken();
+	const response = await fetch(
+		`${KINDE_ISSUER_URL}/api/v1/users/${userId}/properties`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+				Accept: "application/json",
+			},
+		},
+	);
+	if (!response.ok) {
+		if (response.status === 404) return null;
+		const error = await response.text();
+		throw new Error(`Failed to get user properties: ${error}`);
+	}
+	const data = await response.json();
+	if (!data.properties) return null;
+	const key = AI_TRANSLATION_INSTRUCTIONS_KEY;
+	const prefixed = `kp_usr_${key}`;
+	for (const prop of data.properties) {
+		const k = prop.key as string;
+		if (k === key || k === prefixed) {
+			return prop.value ?? null;
+		}
+	}
+	return null;
+}
+
+/**
+ * Updates the ai-translation-instructions user property in Kinde.
+ */
+export async function updateAiTranslationInstructions(
+	userId: string,
+	value: string,
+): Promise<void> {
+	const token = await getManagementToken();
+	await updateSingleProperty(
+		token,
+		userId,
+		AI_TRANSLATION_INSTRUCTIONS_KEY,
+		value,
+	);
+}

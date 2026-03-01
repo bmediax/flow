@@ -11,7 +11,12 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const provider = body?.provider as AIProvider | undefined
-    const apiKey = typeof body?.apiKey === 'string' ? body.apiKey.trim() : ''
+    let apiKey = typeof body?.apiKey === 'string' ? body.apiKey.trim() : ''
+
+    // Server-side fallback: use env key when client sends none (e.g. dev with ANTHROPIC_API_KEY)
+    if (!apiKey && provider === 'anthropic' && process.env.ANTHROPIC_API_KEY) {
+      apiKey = process.env.ANTHROPIC_API_KEY
+    }
 
     if (!apiKey) {
       return NextResponse.json(

@@ -1,6 +1,7 @@
 import { decrypt, encrypt } from "@flow/reader/crypto";
 import {
 	type ColorScheme,
+	useAuth,
 	useColorScheme,
 	useForceRender,
 	useTranslation,
@@ -91,11 +92,14 @@ export const Settings: React.FC = () => {
 
 const AISettings: React.FC = () => {
 	const [settings, setSettings] = useSettings();
+	const { isAuthenticated } = useAuth();
 	const [apiToken, setApiToken] = useState("");
 	const [isLoading, setIsLoading] = useState(true);
 	const [availableModels, setAvailableModels] = useState<AIModelOption[]>([]);
 	const [modelsLoading, setModelsLoading] = useState(false);
 	const [modelsError, setModelsError] = useState<string | null>(null);
+	const [instructionsSyncLoading, setInstructionsSyncLoading] = useState(false);
+	const [instructionsSyncError, setInstructionsSyncError] = useState<string | null>(null);
 	const t = useTranslation("settings.ai");
 
 	const provider = (settings.ai?.provider ?? "anthropic") as AIProvider;
@@ -112,9 +116,10 @@ const AISettings: React.FC = () => {
 		loadApiToken();
 	}, [settings.ai?.apiToken]);
 
-	// Load available models when provider and API token are set (via API route to avoid CORS)
+	// Load available models when provider and (API token or Anthropic with server env key) are set
 	useEffect(() => {
-		if (!apiToken?.trim()) {
+		const useServerKey = provider === "anthropic" && !apiToken?.trim();
+		if (!apiToken?.trim() && !useServerKey) {
 			setAvailableModels([]);
 			setModelsError(null);
 			return;
@@ -125,7 +130,7 @@ const AISettings: React.FC = () => {
 		fetch("/api/ai/models", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ provider, apiKey: apiToken }),
+			body: JSON.stringify({ provider, apiKey: apiToken?.trim() ?? "" }),
 		})
 			.then(async (res) => {
 				const data = await res.json().catch(() => ({}));
@@ -308,6 +313,70 @@ const AISettings: React.FC = () => {
 					placeholder={t("instructions_placeholder")}
 					className="h-24"
 				/>
+				{isAuthenticated && (
+					<div className="flex flex-wrap items-center gap-2">
+						<Button
+							variant="secondary"
+							disabled={instructionsSyncLoading}
+							onClick={async () => {
+								setInstructionsSyncError(null);
+								setInstructionsSyncLoading(true);
+								try {
+									const res = await fetch("/api/user/ai-instructions", {
+										method: "PATCH",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({
+											instructions: settings.ai?.instructions ?? "",
+										}),
+									});
+									if (!res.ok) {
+										const data = await res.json().catch(() => ({}));
+										throw new Error(data.error ?? "Sync failed");
+									}
+								} catch (err) {
+									setInstructionsSyncError(
+										err instanceof Error ? err.message : "Sync failed"
+									);
+								} finally {
+									setInstructionsSyncLoading(false);
+								}
+							}}
+						>
+							{instructionsSyncLoading ? "Syncing…" : "Sync to Kinde"}
+						</Button>
+						<Button
+							variant="secondary"
+							disabled={instructionsSyncLoading}
+							onClick={async () => {
+								setInstructionsSyncError(null);
+								setInstructionsSyncLoading(true);
+								try {
+									const res = await fetch("/api/user/ai-instructions");
+									if (!res.ok) throw new Error("Load failed");
+									const data = (await res.json()) as { instructions?: string };
+									const value = typeof data.instructions === "string" ? data.instructions : "";
+									setSettings({
+										...settings,
+										ai: { ...settings.ai, instructions: value },
+									});
+								} catch (err) {
+									setInstructionsSyncError(
+										err instanceof Error ? err.message : "Load failed"
+									);
+								} finally {
+									setInstructionsSyncLoading(false);
+								}
+							}}
+						>
+							Load from Kinde
+						</Button>
+						{instructionsSyncError && (
+							<span className="typescale-body-small text-red-600 dark:text-red-400">
+								{instructionsSyncError}
+							</span>
+						)}
+					</div>
+				)}
 				<div>
 					<label
 						htmlFor="ai-target-language"
