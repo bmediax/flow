@@ -3,7 +3,6 @@ import {
   Env,
   useAction,
   useBackground,
-  useColorScheme,
   useMobile,
   useSetAction,
   useTranslation,
@@ -40,8 +39,6 @@ import { useAtom } from 'jotai'
 import { useMemo } from 'react'
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  useColorScheme()
-
   const [ready, setReady] = useState(false)
   const setAction = useSetAction()
   const mobile = useMobile()

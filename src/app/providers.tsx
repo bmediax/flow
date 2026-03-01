@@ -6,6 +6,7 @@ import { Provider as JotaiProvider } from "jotai";
 import { usePathname } from "next/navigation";
 
 import { ErrorBoundary, Layout, Theme } from "../components";
+import { ThemeSyncProvider } from "../components/ThemeSyncProvider";
 
 // Type assertion to work around @literal-ui/core type definition issue
 const LiteralProviderAny = LiteralProvider as React.FC<{
@@ -25,8 +26,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
 			<LiteralProviderAny>
 				<JotaiProvider>
 					<ErrorBoundary>
-						<Theme />
-						<Layout>{children}</Layout>
+						<ThemeSyncProvider>
+							<Theme />
+							<Layout>{children}</Layout>
+						</ThemeSyncProvider>
 					</ErrorBoundary>
 				</JotaiProvider>
 			</LiteralProviderAny>

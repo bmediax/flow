@@ -5,11 +5,13 @@ import { useSettings } from '@flow/reader/state'
 
 import { useColorScheme } from './useColorScheme'
 import { useTheme } from './useTheme'
+import { useThemeSync } from './useThemeSync'
 
 export function useBackground() {
   const [{ theme }, setSettings] = useSettings()
   const { dark } = useColorScheme()
   const rawTheme = useTheme()
+  const { saveToRemote } = useThemeSync()
 
   const setBackground = useCallback(
     (background: number) => {
@@ -20,8 +22,9 @@ export function useBackground() {
           background,
         },
       }))
+      saveToRemote({ background })
     },
-    [setSettings],
+    [setSettings, saveToRemote],
   )
 
   // [-1, 1, 3, 5]

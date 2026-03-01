@@ -1,22 +1,36 @@
 import clsx from 'clsx'
-import { ComponentProps } from 'react'
+import { ComponentProps, useCallback } from 'react'
 
 import { range } from '@flow/internal'
 import {
+  useAuth,
   useBackground,
   useColorScheme,
   useSourceColor,
+  useThemeSync,
   useTranslation,
 } from '@flow/reader/hooks'
+import { useSettings } from '@flow/reader/state'
 
 import { ColorPicker, Label } from '../Form'
 import { PaneViewProps, PaneView, Pane } from '../base'
 
 export const ThemeView: React.FC<PaneViewProps> = (props) => {
-  const { setScheme } = useColorScheme()
+  const { scheme, setScheme } = useColorScheme()
   const { sourceColor, setSourceColor } = useSourceColor()
   const [, setBackground] = useBackground()
+  const [{ theme }] = useSettings()
+  const { isAuthenticated } = useAuth()
+  const { saveToRemote, isSyncing } = useThemeSync()
   const t = useTranslation('theme')
+
+  const handleSync = useCallback(async () => {
+    await saveToRemote({
+      sourceColor,
+      background: theme?.background ?? -1,
+      colorScheme: scheme,
+    })
+  }, [saveToRemote, sourceColor, theme?.background, scheme])
 
   return (
     <PaneView {...props}>
@@ -54,6 +68,18 @@ export const ThemeView: React.FC<PaneViewProps> = (props) => {
             />
           </div>
         </div>
+        {isAuthenticated && (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="bg-primary text-on-primary hover:bg-primary/90 disabled:bg-primary/50 rounded px-3 py-1.5 text-sm font-medium transition-colors"
+            >
+              {isSyncing ? 'Syncing...' : 'Sync to Cloud'}
+            </button>
+          </div>
+        )}
       </Pane>
     </PaneView>
   )
