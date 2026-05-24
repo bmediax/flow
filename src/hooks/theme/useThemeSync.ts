@@ -5,6 +5,7 @@ export interface ThemePreferences {
   sourceColor?: string
   background?: number
   colorScheme?: 'light' | 'dark' | 'system'
+  textColor?: string
 }
 
 export function useThemeSync() {

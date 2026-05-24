@@ -46,6 +46,7 @@ export interface ThemeProperties {
 	theme_source_color?: string;
 	theme_background?: string;
 	theme_color_scheme?: string;
+	theme_text_color?: string;
 }
 
 export async function getUserProperties(
@@ -90,6 +91,11 @@ export async function getUserProperties(
 				key === "kp_usr_theme_color_scheme"
 			) {
 				properties.theme_color_scheme = prop.value;
+			} else if (
+				key === "theme_text_color" ||
+				key === "kp_usr_theme_text_color"
+			) {
+				properties.theme_text_color = prop.value;
 			}
 		}
 	}
@@ -163,6 +169,15 @@ export async function updateUserProperties(
 			userId,
 			"theme_color_scheme",
 			properties.theme_color_scheme,
+		);
+	}
+
+	if (properties.theme_text_color !== undefined) {
+		await updateSingleProperty(
+			token,
+			userId,
+			"theme_text_color",
+			properties.theme_text_color,
 		);
 	}
 }

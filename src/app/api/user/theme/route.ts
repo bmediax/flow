@@ -10,6 +10,7 @@ export interface ThemePreferences {
   sourceColor?: string
   background?: number
   colorScheme?: 'light' | 'dark' | 'system'
+  textColor?: string
 }
 
 function propertiesToPreferences(props: ThemeProperties): ThemePreferences {
@@ -30,6 +31,9 @@ function propertiesToPreferences(props: ThemeProperties): ThemePreferences {
       preferences.colorScheme = scheme
     }
   }
+  if (props.theme_text_color) {
+    preferences.textColor = props.theme_text_color
+  }
 
   return preferences
 }
@@ -45,6 +49,9 @@ function preferencesToProperties(prefs: ThemePreferences): ThemeProperties {
   }
   if (prefs.colorScheme !== undefined) {
     properties.theme_color_scheme = prefs.colorScheme
+  }
+  if (prefs.textColor !== undefined) {
+    properties.theme_text_color = prefs.textColor
   }
 
   return properties
@@ -110,6 +117,12 @@ export async function PATCH(request: Request) {
     ) {
       return NextResponse.json(
         { error: 'Invalid colorScheme' },
+        { status: 400 }
+      )
+    }
+    if (body.textColor !== undefined && typeof body.textColor !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid textColor' },
         { status: 400 }
       )
     }

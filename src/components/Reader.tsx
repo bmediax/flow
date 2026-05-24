@@ -25,6 +25,7 @@ import {
 	useDisablePinchZooming,
 	useMobile,
 	useSync,
+	useTextColor,
 	useTranslation,
 	useTypography,
 } from "../hooks";
@@ -251,6 +252,7 @@ function BookPane({ tab, onMouseDown, onClose }: BookPaneProps) {
 	const typography = useTypography(tab);
 	const { dark } = useColorScheme();
 	const [background] = useBackground();
+	const { textColor } = useTextColor();
 
 	const {
 		iframe,
@@ -311,9 +313,10 @@ function BookPane({ tab, onMouseDown, onClose }: BookPaneProps) {
 
 	useEffect(() => {
 		if (dark === undefined) return;
+		const defaultColor = dark ? "#bfc8ca" : "#3f484a";
 		// set `!important` when in dark mode
-		rendition?.themes.override("color", dark ? "#bfc8ca" : "#3f484a", dark);
-	}, [rendition, dark]);
+		rendition?.themes.override("color", textColor ?? defaultColor, dark);
+	}, [rendition, dark, textColor]);
 
 	const [src, setSrc] = useState<string>();
 

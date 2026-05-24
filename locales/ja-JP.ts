@@ -42,6 +42,8 @@ export default {
   'theme.title': 'テーマ',
   'theme.source_color': 'ソースカラー',
   'theme.background_color': '背景色',
+  'theme.text_color': '文字色',
+  'theme.text_color_reset': 'リセット',
 
   'settings.title': '設定',
   'settings.language': '言語',

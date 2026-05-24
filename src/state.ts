@@ -71,6 +71,7 @@ export interface TypographyConfiguration {
 interface ThemeConfiguration {
 	source?: string;
 	background?: number;
+	textColor?: string;
 }
 
 export const defaultSettings: Settings = {};

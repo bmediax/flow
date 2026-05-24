@@ -1,36 +1,24 @@
 import clsx from 'clsx'
-import { ComponentProps, useCallback } from 'react'
+import { ComponentProps } from 'react'
 
 import { range } from '@flow/internal'
 import {
-  useAuth,
   useBackground,
   useColorScheme,
   useSourceColor,
-  useThemeSync,
+  useTextColor,
   useTranslation,
 } from '@flow/reader/hooks'
-import { useSettings } from '@flow/reader/state'
 
 import { ColorPicker, Label } from '../Form'
 import { PaneViewProps, PaneView, Pane } from '../base'
 
 export const ThemeView: React.FC<PaneViewProps> = (props) => {
-  const { scheme, setScheme } = useColorScheme()
+  const { setScheme } = useColorScheme()
   const { sourceColor, setSourceColor } = useSourceColor()
+  const { textColor, setTextColor } = useTextColor()
   const [, setBackground] = useBackground()
-  const [{ theme }] = useSettings()
-  const { isAuthenticated } = useAuth()
-  const { saveToRemote, isSyncing } = useThemeSync()
   const t = useTranslation('theme')
-
-  const handleSync = useCallback(async () => {
-    await saveToRemote({
-      sourceColor,
-      background: theme?.background ?? -1,
-      colorScheme: scheme,
-    })
-  }, [saveToRemote, sourceColor, theme?.background, scheme])
 
   return (
     <PaneView {...props}>
@@ -43,6 +31,24 @@ export const ThemeView: React.FC<PaneViewProps> = (props) => {
               setSourceColor(e.target.value)
             }}
           />
+        </div>
+        <div className="flex items-end gap-3">
+          <ColorPicker
+            name={t('text_color')}
+            value={textColor ?? '#000000'}
+            onChange={(e) => {
+              setTextColor(e.target.value)
+            }}
+          />
+          {textColor && (
+            <button
+              type="button"
+              className="text-on-surface-variant typescale-body-small mb-1.5 underline"
+              onClick={() => setTextColor(undefined)}
+            >
+              {t('text_color_reset')}
+            </button>
+          )}
         </div>
         <div>
           <Label name={t('background_color')}></Label>
@@ -68,18 +74,6 @@ export const ThemeView: React.FC<PaneViewProps> = (props) => {
             />
           </div>
         </div>
-        {isAuthenticated && (
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="bg-primary text-on-primary hover:bg-primary/90 disabled:bg-primary/50 rounded px-3 py-1.5 text-sm font-medium transition-colors"
-            >
-              {isSyncing ? 'Syncing...' : 'Sync to Cloud'}
-            </button>
-          </div>
-        )}
       </Pane>
     </PaneView>
   )

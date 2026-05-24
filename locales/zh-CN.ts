@@ -42,6 +42,8 @@ export default {
   'theme.title': '颜色主题',
   'theme.source_color': '源色',
   'theme.background_color': '背景色',
+  'theme.text_color': '文字颜色',
+  'theme.text_color_reset': '重置',
 
   'settings.title': '设置',
   'settings.language': '语言',
