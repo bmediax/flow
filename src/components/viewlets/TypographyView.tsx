@@ -187,6 +187,7 @@ const NumberField: React.FC<NumberFieldProps> = ({ onChange, ...props }) => {
     <TextField
       as="input"
       type="number"
+      inputMode="decimal"
       placeholder="default"
       actions={[
         {

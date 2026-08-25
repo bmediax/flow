@@ -32,6 +32,7 @@ import {
 import { BookTab, reader, useReaderSnapshot } from "../models";
 import { isTouchScreen } from "../platform";
 import { updateCustomStyle } from "../styles";
+import { isEditableElement } from "../utils/dom";
 import {
 	Annotations,
 	getClickedAnnotation,
@@ -41,17 +42,6 @@ import { DropZone, SplitView, useDndContext, useSplitViewItem } from "./base";
 import * as pages from "./pages";
 import { Tab } from "./Tab";
 import { TextSelectionMenu } from "./TextSelectionMenu";
-
-function isEditableElement(target: EventTarget | null): boolean {
-	if (!target || !(target instanceof HTMLElement)) return false;
-	const el = target as HTMLElement;
-	const tag = el.tagName?.toLowerCase();
-	if (tag === "input" || tag === "textarea" || tag === "select") return true;
-	if (el.isContentEditable === true) return true;
-	// Target might be inside an editable (e.g. React wrapper)
-	if (el.closest?.("input, textarea, select, [contenteditable='true']")) return true;
-	return false;
-}
 
 function handleKeyDown(tab?: BookTab) {
 	return (e: KeyboardEvent) => {

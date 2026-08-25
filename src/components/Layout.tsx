@@ -50,7 +50,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, [mobile, setAction])
 
   return (
-    <div id="layout" className="select-none">
+    <div id="layout">
       <SplitView>
         {mobile === false && <ActivityBar />}
         {mobile === true && <NavigationBar />}
@@ -244,10 +244,11 @@ function NavigationBar() {
   const r = useReaderSnapshot()
   const readMode = r.focusedTab?.isBook
   const [visible, setVisible] = useAtom(navbarAtom)
+  const [action] = useAction()
 
   return (
     <>
-      {visible && (
+      {visible && !action && (
         <Overlay
           className="!bg-transparent"
           onClick={() => setVisible(false)}
@@ -319,12 +320,14 @@ const SideBar: React.FC = () => {
 
   return (
     <>
-      {action && mobile && <Overlay onClick={() => setAction(undefined)} />}
+      {action && mobile && (
+        <Overlay className="!z-20" onClick={() => setAction(undefined)} />
+      )}
       <div
         className={clsx(
           'SideBar bg-surface flex flex-col',
           !action && '!hidden',
-          mobile ? 'absolute inset-y-0 right-0 z-10' : '',
+          mobile ? 'absolute inset-y-0 right-0 z-30' : '',
         )}
         style={{ width: mobile ? '75%' : size }}
       >
@@ -354,7 +357,7 @@ const Reader: React.FC<ReaderProps> = ({ className, children, ...props }) => {
   return (
     <div
       className={clsx(
-        'Reader flex-1 overflow-hidden',
+        'Reader flex-1 overflow-hidden select-none',
         readMode || 'mb-12 sm:mb-0',
         bg,
       )}
